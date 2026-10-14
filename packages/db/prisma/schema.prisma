@@ -17,16 +17,18 @@ enum MembershipRole {
 }
 
 model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String
-  password String
+  id          String       @id @default(uuid())
+  name        String
+  email       String
+  password    String
+  memberships Membership[]
 }
 
 model Organization {
-  id   String @id @default(uuid())
-  name String
-  slug String
+  id          String       @id @default(uuid())
+  name        String
+  slug        String
+  memberships Membership[]
 }
 
 model Membership {
@@ -34,6 +36,8 @@ model Membership {
   userId         String
   organizationId String
   role           MembershipRole
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Project {
@@ -107,8 +111,8 @@ model Trace {
   project Project @relation(fields: [projectId], references: [id])
   apiKey  APIKey? @relation(fields: [apiKeyId], references: [id])
 
-  @@index([projectId, createdAt])
   @@unique([projectId, traceId])
+  @@index([projectId, createdAt])
   @@index([apiKeyId])
   @@index([status])
 }

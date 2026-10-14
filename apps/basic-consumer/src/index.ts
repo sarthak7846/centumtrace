@@ -6,7 +6,7 @@ console.log(process.env.OPENAI_API_KEY);
 
 const observe = new Observe({
   apiKey:
-    "obs_live_818ca4ac9034a931de0c1cc018c33589cec81e404a41a962c804b4ce513d992e",
+    "obs_live_3060e2c302a9a1ffbc8e4b1ca14dd269d7446ad295e84d16def58ce6eb25885a",
   baseUrl: "http://localhost:8000",
 });
 

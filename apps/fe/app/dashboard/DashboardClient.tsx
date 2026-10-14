@@ -1,7 +1,13 @@
-const DashboardClient = () => {
+const DashboardClient = ({ projects }: { projects: any[] }) => {
   return (
-    <div>DashboardClient</div>
-  )
-}
+    <div>
+      <h1>Dashboard</h1>
 
-export default DashboardClient
+      {projects.map((project: any) => (
+        <div key={project.id}>{project.name}</div>
+      ))}
+    </div>
+  );
+};
+
+export default DashboardClient;
