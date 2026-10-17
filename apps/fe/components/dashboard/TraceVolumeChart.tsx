@@ -1,6 +1,6 @@
 "use client";
 
-import { AnalyticsVolume } from "@/app/dashboard/types";
+import { AnalyticsVolume } from "@/app/(signed)/dashboard/types";
 import {
   ResponsiveContainer,
   LineChart,

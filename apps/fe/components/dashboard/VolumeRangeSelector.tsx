@@ -1,6 +1,6 @@
 "use client";
 
-import { TraceVolumeRange } from "@/app/dashboard/types";
+import { TraceVolumeRange } from "@/app/(signed)/dashboard/types";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const ranges: { label: string; value: TraceVolumeRange }[] = [

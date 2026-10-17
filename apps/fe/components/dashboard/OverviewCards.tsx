@@ -1,4 +1,4 @@
-import { AnalyticsOverview } from "@/app/dashboard/types";
+import { AnalyticsOverview } from "@/app/(signed)/dashboard/types";
 
 export default function OverviewCards({
   analyticsOverview,
