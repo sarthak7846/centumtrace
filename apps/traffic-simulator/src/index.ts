@@ -6,7 +6,7 @@ import { generateTrace } from "./simulator";
 dotenv.config({ path: path.resolve(import.meta.dirname, "../../../.env") });
 
 const observe = new Observe({
-  apiKey: process.env.OBSERVE_API_KEY!,
+  apiKey: process.env.OBSERVE_API_KEY_RICKY_CODEMATE!,
   baseUrl: process.env.OBSERVE_API_URL!,
 });
 

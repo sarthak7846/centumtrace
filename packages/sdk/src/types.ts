@@ -19,6 +19,10 @@ export interface TraceData {
   totalTokens?: number;
   input?: Record<string, unknown>;
   output?: Record<string, unknown>;
+  inputCost?: number;
+  outputCost?: number;
+  totalCost?: number;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateTracePayload {
