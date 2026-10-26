@@ -196,6 +196,47 @@ export class ProjectService {
           mode: 'insensitive',
         },
       }),
+
+      ...(query.apiKeyId && {
+        apiKeyId: {
+          contains: query.apiKeyId,
+          mode: 'insensitive',
+        },
+      }),
+
+      ...((query.minLatency !== undefined ||
+        query.maxLatency !== undefined) && {
+        latencyMs: {
+          ...(query.minLatency !== undefined && {
+            gte: query.minLatency,
+          }),
+          ...(query.maxLatency !== undefined && {
+            lte: query.maxLatency,
+          }),
+        },
+      }),
+
+      ...((query.minCost !== undefined || query.maxCost !== undefined) && {
+        totalCost: {
+          ...(query.minCost !== undefined && {
+            gte: query.minCost,
+          }),
+          ...(query.maxCost !== undefined && {
+            lte: query.maxCost,
+          }),
+        },
+      }),
+
+      ...((query.minTokens !== undefined || query.maxTokens !== undefined) && {
+        totalTokens: {
+          ...(query.minTokens !== undefined && {
+            gte: query.minTokens,
+          }),
+          ...(query.maxTokens !== undefined && {
+            lte: query.maxTokens,
+          }),
+        },
+      }),
     };
 
     // Apply the requested time range.

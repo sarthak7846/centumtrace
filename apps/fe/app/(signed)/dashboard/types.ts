@@ -59,9 +59,16 @@ export type SearchParams = Promise<{
   provider?: string;
   model?: string;
   traceId?: string;
+  apiKeyId?: string;
   range?: string;
   sortBy?: string;
   sortOrder?: string;
+  minLatency?: string;
+  maxLatency?: string;
+  minCost?: string;
+  maxCost?: string;
+  minTokens?: string;
+  maxTokens?: string;
 }>;
 
 export type TraceDetails = {
@@ -71,7 +78,7 @@ export type TraceDetails = {
   traceId: string;
   provider: string;
   model: string;
-  status: 'SUCCESS' | 'ERROR';
+  status: "SUCCESS" | "ERROR";
   latencyMs: number | null;
   startedAt: string | null;
   endedAt: string | null;

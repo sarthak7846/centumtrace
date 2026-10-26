@@ -2,6 +2,21 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+export const traceFilterQueryFields = [
+  "status",
+  "provider",
+  "model",
+  "traceId",
+  "apiKeyId",
+  "range",
+  "minLatency",
+  "maxLatency",
+  "minCost",
+  "maxCost",
+  "minTokens",
+  "maxTokens",
+];
+
 export default function TraceFilters({ projectId }: { projectId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -15,7 +30,7 @@ export default function TraceFilters({ projectId }: { projectId: string }) {
     params.set("projectId", projectId);
     params.set("page", "1"); // Reset pagination when filters change.
 
-    for (const key of ["status", "provider", "model", "traceId", "range"]) {
+    for (const key of traceFilterQueryFields) {
       const value = String(formData.get(key) ?? "").trim();
 
       if (value) {
@@ -71,6 +86,76 @@ export default function TraceFilters({ projectId }: { projectId: string }) {
           name="traceId"
           defaultValue={searchParams.get("traceId") ?? ""}
           placeholder="Search trace ID"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        API Key ID
+        <input
+          name="apiKeyId"
+          defaultValue={searchParams.get("apiKeyId") ?? ""}
+          placeholder="Search api key ID"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        Min Latency
+        <input
+          name="minLatency"
+          defaultValue={searchParams.get("minLatency") ?? ""}
+          placeholder="Search min latency"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        Max Latency
+        <input
+          name="maxLatency"
+          defaultValue={searchParams.get("maxLatency") ?? ""}
+          placeholder="Search max latency"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        Min Cost
+        <input
+          name="minCost"
+          defaultValue={searchParams.get("minCost") ?? ""}
+          placeholder="Search min cost"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        Max Cost
+        <input
+          name="maxCost"
+          defaultValue={searchParams.get("maxCost") ?? ""}
+          placeholder="Search max cost"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        Min Tokens
+        <input
+          name="minTokens"
+          defaultValue={searchParams.get("minTokens") ?? ""}
+          placeholder="Search min tokens"
+          className="rounded border p-2"
+        />
+      </label>
+
+      <label className="grid gap-1 text-sm">
+        Max Tokens
+        <input
+          name="maxTokens"
+          defaultValue={searchParams.get("maxTokens") ?? ""}
+          placeholder="Search max tokens"
           className="rounded border p-2"
         />
       </label>

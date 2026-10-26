@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { prisma, MembershipRole } from '@observe/db';
 
 @Injectable()
@@ -20,11 +20,16 @@ export class MembershipService {
   }
 
   async getMembershipById(userId: string, organizationId: string) {
-    return prisma.membership.findFirstOrThrow({
+    const membership = await prisma.membership.findFirst({
       where: {
         userId,
         organizationId,
       },
     });
+
+    if (!membership)
+      throw new ForbiddenException(
+        "Membership doesn't exist for this organization",
+      );
   }
 }

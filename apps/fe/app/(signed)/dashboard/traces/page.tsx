@@ -92,7 +92,19 @@ export default async function TracesPage({
     query.set("sortOrder", params.sortOrder);
   }
 
-  for (const key of ["provider", "model", "traceId"] as const) {
+  for (const key of [
+    "provider",
+    "model",
+    "traceId",
+    "apiKeyId",
+    "range",
+    "minLatency",
+    "maxLatency",
+    "minCost",
+    "maxCost",
+    "minTokens",
+    "maxTokens",
+  ] as const) {
     const value = params[key]?.trim();
     if (value) query.set(key, value);
   }
