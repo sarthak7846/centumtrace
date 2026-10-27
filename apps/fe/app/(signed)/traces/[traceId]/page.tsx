@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser, getProjects, getTraceDetails } from "../../actions";
+import { getCurrentUser, getProjects, getTraceDetails } from "../../dashboard/actions";
 
 type PageProps = {
   params: Promise<{ traceId: string }>;

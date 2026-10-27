@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { SearchParams } from "../types";
-import { getAllTraces, getCurrentUser, getProjects } from "../actions";
+import { SearchParams } from "../dashboard/types";
+import { getAllTraces, getCurrentUser, getProjects } from "../dashboard/actions";
 import TraceFilters from "@/components/dashboard/TraceFilters";
 import { Activity, Layers3, ListFilter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

@@ -1,4 +1,5 @@
 import { AnalyticsOverview } from "@/app/(signed)/dashboard/types";
+import Link from "next/link";
 
 export default function OverviewCards({
   analyticsOverview,
@@ -98,7 +99,16 @@ export default function OverviewCards({
                 key={metric.label}
                 className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
               >
-                <p className="text-sm text-gray-500">{metric.label}</p>
+                {metric.label === "Total Traces" ? (
+                  <Link
+                    href={`/traces`}
+                    className="text-sm text-gray-500 hover:underline"
+                  >
+                    {metric.label}
+                  </Link>
+                ) : (
+                  <p className="text-sm text-gray-500">{metric.label}</p>
+                )}
 
                 <p className="mt-2 text-2xl font-semibold text-gray-900">
                   {metric.value}

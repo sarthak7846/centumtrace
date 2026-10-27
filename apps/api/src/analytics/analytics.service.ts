@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { prisma } from '@observe/db';
 import { MembershipService } from 'src/membership/membership.service';
+import { VolumeRange } from './analytics.types';
 
-type VolumeRange = '24h' | '7d' | '30d';
 
 @Injectable()
 export class AnalyticsService {
@@ -218,6 +218,372 @@ export class AnalyticsService {
         success: Number(row.success),
         errors: Number(row.errors),
       })),
+    };
+  }
+
+  async getLatencyTrend(
+    projectId: string,
+    userId: string,
+    range: VolumeRange = '24h',
+  ) {
+    await this.authorizeProject(projectId, userId);
+
+    const { startDate, endDate, interval } = this.getRangeBounds(range);
+
+    const result = await prisma.$queryRaw<
+      {
+        timestamp: Date;
+        traceCount: bigint;
+        averageLatencyMs: number | null;
+        p50LatencyMs: number | null;
+        p95LatencyMs: number | null;
+        p99LatencyMs: number | null;
+      }[]
+    >`
+    SELECT
+      DATE_TRUNC(${interval}, "createdAt") AS timestamp,
+      COUNT(*) AS "traceCount",
+      AVG("latencyMs")::float8 AS "averageLatencyMs",
+
+      PERCENTILE_CONT(0.50)
+        WITHIN GROUP (ORDER BY "latencyMs")::float8
+        AS "p50LatencyMs",
+
+      PERCENTILE_CONT(0.95)
+        WITHIN GROUP (ORDER BY "latencyMs")::float8
+        AS "p95LatencyMs",
+
+      PERCENTILE_CONT(0.99)
+        WITHIN GROUP (ORDER BY "latencyMs")::float8
+        AS "p99LatencyMs"
+
+    FROM "Trace"
+    WHERE
+      "projectId" = ${projectId}
+      AND "createdAt" >= ${startDate}
+      AND "createdAt" <= ${endDate}
+      AND "latencyMs" IS NOT NULL
+
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+    return {
+      range,
+      interval,
+      data: result.map((row) => ({
+        timestamp: row.timestamp,
+        traceCount: Number(row.traceCount),
+        averageLatencyMs: row.averageLatencyMs,
+        p50LatencyMs: row.p50LatencyMs,
+        p95LatencyMs: row.p95LatencyMs,
+        p99LatencyMs: row.p99LatencyMs,
+      })),
+    };
+  }
+
+  async getLatencyBreakdown(
+    projectId: string,
+    userId: string,
+    range: VolumeRange = '24h',
+  ) {
+    await this.authorizeProject(projectId, userId);
+
+    const { startDate, endDate } = this.getRangeBounds(range);
+
+    const result = await prisma.$queryRaw<
+      {
+        provider: string;
+        model: string;
+        traceCount: bigint;
+        averageLatencyMs: number | null;
+        p50LatencyMs: number | null;
+        p95LatencyMs: number | null;
+        p99LatencyMs: number | null;
+      }[]
+    >`
+    SELECT
+      "provider",
+      "model",
+      COUNT(*) AS "traceCount",
+      AVG("latencyMs")::float8 AS "averageLatencyMs",
+
+      PERCENTILE_CONT(0.50)
+        WITHIN GROUP (ORDER BY "latencyMs")::float8
+        AS "p50LatencyMs",
+
+      PERCENTILE_CONT(0.95)
+        WITHIN GROUP (ORDER BY "latencyMs")::float8
+        AS "p95LatencyMs",
+
+      PERCENTILE_CONT(0.99)
+        WITHIN GROUP (ORDER BY "latencyMs")::float8
+        AS "p99LatencyMs"
+
+    FROM "Trace"
+    WHERE
+      "projectId" = ${projectId}
+      AND "createdAt" >= ${startDate}
+      AND "createdAt" <= ${endDate}
+      AND "latencyMs" IS NOT NULL
+
+    GROUP BY "provider", "model"
+    ORDER BY COUNT(*) DESC
+  `;
+
+    return {
+      range,
+      data: result.map((row) => ({
+        provider: row.provider,
+        model: row.model,
+        traceCount: Number(row.traceCount),
+        averageLatencyMs: row.averageLatencyMs,
+        p50LatencyMs: row.p50LatencyMs,
+        p95LatencyMs: row.p95LatencyMs,
+        p99LatencyMs: row.p99LatencyMs,
+      })),
+    };
+  }
+
+  async getErrorBreakdown(
+    projectId: string,
+    userId: string,
+    range: VolumeRange = '24h',
+  ) {
+    await this.authorizeProject(projectId, userId);
+
+    const { startDate, endDate } = this.getRangeBounds(range);
+
+    const where = {
+      projectId,
+      createdAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+    };
+
+    const [totalTraces, errorTraces, result] = await Promise.all([
+      prisma.trace.count({
+        where,
+      }),
+
+      prisma.trace.count({
+        where: {
+          ...where,
+          status: 'ERROR',
+        },
+      }),
+
+      prisma.$queryRaw<
+        {
+          provider: string;
+          model: string;
+          errorType: string;
+          errorCount: bigint;
+        }[]
+      >`
+      SELECT
+        "provider",
+        "model",
+        COALESCE("errorType", 'UNKNOWN') AS "errorType",
+        COUNT(*) AS "errorCount"
+
+      FROM "Trace"
+      WHERE
+        "projectId" = ${projectId}
+        AND "createdAt" >= ${startDate}
+        AND "createdAt" <= ${endDate}
+        AND "status" = 'ERROR'
+
+      GROUP BY
+        "provider",
+        "model",
+        COALESCE("errorType", 'UNKNOWN')
+
+      ORDER BY COUNT(*) DESC
+    `,
+    ]);
+
+    return {
+      range,
+      totalTraces,
+      errorTraces,
+      errorRate:
+        totalTraces > 0
+          ? Number(((errorTraces / totalTraces) * 100).toFixed(2))
+          : 0,
+
+      data: result.map((row) => {
+        const errorCount = Number(row.errorCount);
+
+        return {
+          provider: row.provider,
+          model: row.model,
+          errorType: row.errorType,
+          errorCount,
+          percentageOfErrors:
+            errorTraces > 0
+              ? Number(((errorCount / errorTraces) * 100).toFixed(2))
+              : 0,
+        };
+      }),
+    };
+  }
+
+  async getCostBreakdown(
+    projectId: string,
+    userId: string,
+    range: VolumeRange = '24h',
+  ) {
+    await this.authorizeProject(projectId, userId);
+
+    const { startDate, endDate } = this.getRangeBounds(range);
+
+    const result = await prisma.$queryRaw<
+      {
+        provider: string;
+        model: string;
+        traceCount: bigint;
+        inputTokens: bigint;
+        outputTokens: bigint;
+        totalTokens: bigint;
+        inputCost: number;
+        outputCost: number;
+        totalCost: number;
+      }[]
+    >`
+    SELECT
+      "provider",
+      "model",
+      COUNT(*) AS "traceCount",
+
+      COALESCE(SUM("inputTokens"), 0) AS "inputTokens",
+      COALESCE(SUM("outputTokens"), 0) AS "outputTokens",
+      COALESCE(SUM("totalTokens"), 0) AS "totalTokens",
+
+      COALESCE(SUM("inputCost"), 0)::float8 AS "inputCost",
+      COALESCE(SUM("outputCost"), 0)::float8 AS "outputCost",
+      COALESCE(SUM("totalCost"), 0)::float8 AS "totalCost"
+
+    FROM "Trace"
+    WHERE
+      "projectId" = ${projectId}
+      AND "createdAt" >= ${startDate}
+      AND "createdAt" <= ${endDate}
+
+    GROUP BY "provider", "model"
+    ORDER BY SUM(COALESCE("totalCost", 0)) DESC
+  `;
+
+    const data = result.map((row) => ({
+      provider: row.provider,
+      model: row.model,
+      traceCount: Number(row.traceCount),
+      inputTokens: Number(row.inputTokens),
+      outputTokens: Number(row.outputTokens),
+      totalTokens: Number(row.totalTokens),
+      inputCost: row.inputCost,
+      outputCost: row.outputCost,
+      totalCost: row.totalCost,
+    }));
+
+    const totalCost = data.reduce((sum, row) => sum + row.totalCost, 0);
+
+    const totalTokens = data.reduce((sum, row) => sum + row.totalTokens, 0);
+
+    return {
+      range,
+      totalCost: Number(totalCost.toFixed(8)),
+      totalTokens,
+      data: data.map((row) => ({
+        ...row,
+        costPercentage:
+          totalCost > 0
+            ? Number(((row.totalCost / totalCost) * 100).toFixed(2))
+            : 0,
+      })),
+    };
+  }
+
+  async getCostTrend(
+    projectId: string,
+    userId: string,
+    range: VolumeRange = '24h',
+  ) {
+    await this.authorizeProject(projectId, userId);
+
+    const { startDate, endDate, interval } = this.getRangeBounds(range);
+
+    const result = await prisma.$queryRaw<
+      {
+        timestamp: Date;
+        traceCount: bigint;
+        inputTokens: bigint;
+        outputTokens: bigint;
+        totalTokens: bigint;
+        totalCost: number;
+      }[]
+    >`
+    SELECT
+      DATE_TRUNC(${interval}, "createdAt") AS timestamp,
+      COUNT(*) AS "traceCount",
+
+      COALESCE(SUM("inputTokens"), 0) AS "inputTokens",
+      COALESCE(SUM("outputTokens"), 0) AS "outputTokens",
+      COALESCE(SUM("totalTokens"), 0) AS "totalTokens",
+
+      COALESCE(SUM("totalCost"), 0)::float8 AS "totalCost"
+
+    FROM "Trace"
+    WHERE
+      "projectId" = ${projectId}
+      AND "createdAt" >= ${startDate}
+      AND "createdAt" <= ${endDate}
+
+    GROUP BY 1
+    ORDER BY 1 ASC
+  `;
+
+    return {
+      range,
+      interval,
+      data: result.map((row) => ({
+        timestamp: row.timestamp,
+        traceCount: Number(row.traceCount),
+        inputTokens: Number(row.inputTokens),
+        outputTokens: Number(row.outputTokens),
+        totalTokens: Number(row.totalTokens),
+        totalCost: row.totalCost,
+      })),
+    };
+  }
+
+  private async authorizeProject(projectId: string, userId: string) {
+    const project = await prisma.project.findUniqueOrThrow({
+      where: { id: projectId },
+    });
+
+    await this.membershipService.getMembershipById(
+      userId,
+      project.organizationId,
+    );
+
+    return project;
+  }
+
+  private getRangeBounds(range: VolumeRange) {
+    const now = new Date();
+
+    const durationMs = {
+      '24h': 24 * 60 * 60 * 1000,
+      '7d': 7 * 24 * 60 * 60 * 1000,
+      '30d': 30 * 24 * 60 * 60 * 1000,
+    }[range];
+
+    return {
+      startDate: new Date(now.getTime() - durationMs),
+      endDate: now,
+      interval: (range === '24h' ? 'hour' : 'day') as 'hour' | 'day',
     };
   }
 }
