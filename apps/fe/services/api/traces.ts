@@ -12,5 +12,6 @@ export const getTraceDetails = async (
   projectId: string,
   traceId: string,
 ): Promise<{ data: TraceDetails }> => {
+  console.log("project id", projectId);
   return apiFetch(`/project/${projectId}/trace/${encodeURIComponent(traceId)}`);
 };

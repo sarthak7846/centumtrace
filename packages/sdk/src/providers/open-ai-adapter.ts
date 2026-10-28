@@ -8,10 +8,16 @@ type ModelPricing = {
 };
 
 const pricing: Record<string, ModelPricing> = {
-  "gpt-5.6-sol": {
+  "gpt-4": {
     inputPerMillion: 4,
     outputPerMillion: 20,
     cachedInputPerMillion: 0.4,
+  },
+
+  "gpt-5.4-mini-2026-03-17": {
+    inputPerMillion: 0.75,
+    outputPerMillion: 4.5,
+    cachedInputPerMillion: 0.075,
   },
 };
 
@@ -23,6 +29,7 @@ export class OpenAIAdapter implements ProviderAdapter {
     const inputTokens = responseData.usage.input_tokens;
     const outputTokens = responseData.usage.output_tokens;
     const totalTokens = responseData.usage.total_tokens;
+    const cachedTokens = responseData.usage.input_tokens_details.cached_tokens;
 
     // Calculate cost based on model
     const modelPricing = pricing[responseData.model];
@@ -31,7 +38,10 @@ export class OpenAIAdapter implements ProviderAdapter {
     let totalCost = 0;
 
     if (modelPricing) {
-      inputCost = (inputTokens * modelPricing.inputPerMillion) / 1000000;
+      inputCost =
+        ((inputTokens - cachedTokens) * modelPricing.inputPerMillion +
+          cachedTokens * modelPricing.inputPerMillion) /
+        1000000;
       outputCost = (outputTokens * modelPricing.outputPerMillion) / 1000000;
       totalCost = inputCost + outputCost;
     }

@@ -1,5 +1,6 @@
+import { resolveSelectedProject } from "@/services/api/projects";
+import { getTraceDetails } from "@/services/api/traces";
 import Link from "next/link";
-import { getCurrentUser, getProjects, getTraceDetails } from "../../dashboard/actions";
 
 type PageProps = {
   params: Promise<{ traceId: string }>;
@@ -24,27 +25,19 @@ export default async function TraceDetailsPage({
   const { traceId } = await params;
   const { projectId } = await searchParams;
 
-  const user = await getCurrentUser();
-  const organization = user.memberships?.[0]?.organization;
+  const { selectedProject } = await resolveSelectedProject(projectId);
 
-  if (!organization || !projectId) {
-    return <p>Project not found.</p>;
+  if (!selectedProject) {
+    return <p>Create a project to view trace.</p>;
   }
 
-  const projects = await getProjects(organization.id);
-  const project = projects.find((item) => item.id === projectId);
-
-  if (!project) {
-    return <p>Project not found or access denied.</p>;
-  }
-
-  const res = await getTraceDetails(project.id, traceId);
+  const res = await getTraceDetails(selectedProject.id, traceId);
   const trace = res.data;
 
   return (
     <main className="space-y-6 p-6">
       <Link
-        href={`/dashboard/traces?projectId=${encodeURIComponent(project.id)}`}
+        href={`/traces?projectId=${encodeURIComponent(selectedProject.id)}`}
         className="text-sm text-blue-600 hover:underline"
       >
         ← Back to traces

@@ -1,19 +1,21 @@
 import { Observe, TraceStatus } from "@observe/sdk";
 import OpenAI from "openai";
+import dotenv from "dotenv";
+import path from "path";
 import "dotenv/config";
 
-console.log(process.env.OPENAI_API_KEY);
+dotenv.config({ path: path.resolve(import.meta.dirname, "../../../.env") });
 
 const observe = new Observe({
-  apiKey:
-    "obs_live_3060e2c302a9a1ffbc8e4b1ca14dd269d7446ad295e84d16def58ce6eb25885a",
-  baseUrl: "http://localhost:8000",
+  apiKey: process.env.OBSERVE_API_KEY_RICKY_CODEMATE!,
+  baseUrl: process.env.OBSERVE_API_URL!,
 });
 
-const client = new OpenAI();
+const openAIClient = new OpenAI();
+const openAIModel = "gpt-5.4-mini-2026-03-17";
 
 const trace = observe.startTrace({
-  model: "gpt-4",
+  model: openAIModel,
   provider: "openai",
 });
 
@@ -24,8 +26,8 @@ const response = await trace.capture(
     message: "Write a one-sentence bedtime story about a unicorn.",
   },
   async () => {
-    return client.responses.create({
-      model: "gpt-5.6",
+    return openAIClient.responses.create({
+      model: openAIModel,
       input: "Write a one-sentence bedtime story about a unicorn.",
     });
     // return {

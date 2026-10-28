@@ -1,7 +1,3 @@
-
-"use client";
-
-import { useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -41,24 +37,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-// Temporary mock data. Replace with analytics API responses later.
-
-const latencyData = [
-  { date: "Oct 21", p50: 720, p95: 1100, p99: 1280 },
-  { date: "Oct 22", p50: 790, p95: 1240, p99: 1390 },
-  { date: "Oct 23", p50: 750, p95: 1180, p99: 1350 },
-  { date: "Oct 24", p50: 820, p95: 1310, p99: 1450 },
-  { date: "Oct 25", p50: 860, p95: 1390, p99: 1480 },
-  { date: "Oct 26", p50: 810, p95: 1320, p99: 1440 },
-  { date: "Oct 27", p50: 927, p95: 1455, p99: 1499 },
-];
-
-const latencyBreakdown = [
-  { model: "GPT-5", provider: "OpenAI", requests: 120, avg: 950, p95: 1420 },
-  { model: "Claude Sonnet", provider: "Anthropic", requests: 50, avg: 878, p95: 1300 },
-  { model: "Gemini", provider: "Google", requests: 30, avg: 820, p95: 1180 },
-];
+import { TraceVolumeRange, validRanges } from "../dashboard/types";
+import { resolveSelectedProject } from "@/services/api/projects";
+import { getAnalyticsOverview } from "@/services/api/analytics";
+import SummaryMetrics from "@/components/analytics/SummaryMetrics";
+import LatencySection from "@/components/analytics/LatencySection";
 
 const errorData = [
   { type: "Rate limit", count: 4, fill: "#f59e0b" },
@@ -77,80 +60,23 @@ const costTrend = [
 
 const costBreakdown = [
   { model: "GPT-5", provider: "OpenAI", tokens: 6900, cost: 0.1, share: 79.55 },
-  { model: "Claude Sonnet", provider: "Anthropic", tokens: 1200, cost: 0.018, share: 14.31 },
-  { model: "Gemini", provider: "Google", tokens: 798, cost: 0.007711, share: 6.14 },
+  {
+    model: "Claude Sonnet",
+    provider: "Anthropic",
+    tokens: 1200,
+    cost: 0.018,
+    share: 14.31,
+  },
+  {
+    model: "Gemini",
+    provider: "Google",
+    tokens: 798,
+    cost: 0.007711,
+    share: 6.14,
+  },
 ];
 
-const tooltipStyle = {
-  backgroundColor: "var(--background)",
-  border: "1px solid var(--border)",
-  borderRadius: "10px",
-  fontSize: 12,
-};
 
-function MetricCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  trend,
-  trendUp,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ElementType;
-  trend?: string;
-  trendUp?: boolean;
-}) {
-  return (
-    <Card className="border-border/70 shadow-none">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-semibold tracking-tight">{value}</p>
-          </div>
-          <div className="rounded-lg border bg-muted/40 p-2.5">
-            <Icon className="h-4 w-4 text-muted-foreground" />
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-          {trend && (
-            <span
-              className={`inline-flex items-center gap-0.5 font-medium ${
-                trendUp ? "text-red-500" : "text-emerald-600"
-              }`}
-            >
-              {trendUp ? (
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              ) : (
-                <ArrowDownRight className="h-3.5 w-3.5" />
-              )}
-              {trend}
-            </span>
-          )}
-          <span>{description}</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SectionHeading({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <h2 className="text-base font-semibold tracking-tight">{title}</h2>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </div>
-  );
-}
 
 function ChartEmptyLabel() {
   return (
@@ -160,8 +86,26 @@ function ChartEmptyLabel() {
   );
 }
 
-export default function AnalyticsPage() {
-  const [range, setRange] = useState("7d");
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ projectId?: string; range?: TraceVolumeRange }>;
+}) {
+  const params = await searchParams;
+
+  const { selectedProject } = await resolveSelectedProject(params.projectId);
+
+  if (!selectedProject) {
+    return <p>No projects yet. Create your first project.</p>;
+  }
+
+  const range = validRanges.includes(params.range as TraceVolumeRange)
+    ? (params.range as TraceVolumeRange)
+    : "7d";
+
+  const [overview] = await Promise.all([
+    getAnalyticsOverview(selectedProject.id),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-8 p-4 md:p-8">
@@ -172,9 +116,7 @@ export default function AnalyticsPage() {
             <div className="rounded-lg border bg-muted/40 p-2">
               <Activity className="h-5 w-5" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Analytics
-            </h1>
+            <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Understand your LLM performance, reliability, and spending.
@@ -187,16 +129,14 @@ export default function AnalyticsPage() {
             Export
           </Button>
 
-          <Button variant="outline" className="gap-2" >
-            <a href="/dashboard/traces">
-              View traces
-            </a>
+          <Button variant="outline" className="gap-2">
+            <a href="/dashboard/traces">View traces</a>
           </Button>
 
           <div className="relative">
             <select
               value={range}
-              onChange={(event) => setRange(event.target.value)}
+              // onChange={(event) => {}}
               className="h-9 appearance-none rounded-md border border-input bg-background py-1 pl-3 pr-9 text-sm outline-none focus:ring-2 focus:ring-ring"
               aria-label="Analytics date range"
             >
@@ -210,177 +150,13 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Summary metrics */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <SectionHeading
-            title="Performance overview"
-            description="A snapshot of your project's LLM activity."
-          />
-          <Badge variant="outline" className="font-normal">
-            {range === "24h"
-              ? "24-hour window"
-              : range === "7d"
-                ? "7-day window"
-                : "30-day window"}
-          </Badge>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            title="P95 latency"
-            value="1,455 ms"
-            description="95th percentile response time"
-            icon={Clock3}
-          />
-          <MetricCard
-            title="Error rate"
-            value="3.00%"
-            description="6 failed out of 200 traces"
-            icon={AlertTriangle}
-          />
-          <MetricCard
-            title="Total cost"
-            value="$0.1257"
-            description="Recorded model usage"
-            icon={CircleDollarSign}
-          />
-          <MetricCard
-            title="Total tokens"
-            value="8,898"
-            description="Input and output combined"
-            icon={Coins}
-          />
-        </div>
-      </section>
+      <SummaryMetrics range={range} overview={overview} />
 
       {/* Latency section */}
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Gauge className="h-5 w-5 text-muted-foreground" />
-          <SectionHeading
-            title="Latency performance"
-            description="Track response times and identify slower model requests."
-          />
-        </div>
-
-        <Card className="border-border/70 shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base">Latency over time</CardTitle>
-            <CardDescription>
-              Compare median latency against the slowest 5% and 1% of requests.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-75 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={latencyData}
-                  margin={{ top: 8, right: 12, bottom: 0, left: -12 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="var(--border)"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    tickFormatter={(value) => `${value}ms`}
-                  />
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(value) => [`${value} ms`]}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="p50"
-                    name="P50"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="p95"
-                    name="P95"
-                    stroke="#6366f1"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="p99"
-                    name="P99"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    dot={false}
-                    activeDot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/70 shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base">Latency by model</CardTitle>
-            <CardDescription>
-              Compare performance across providers and models.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-162.5 text-sm">
-                <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Model</th>
-                    <th className="pb-3 font-medium">Provider</th>
-                    <th className="pb-3 text-right font-medium">Requests</th>
-                    <th className="pb-3 text-right font-medium">Avg. latency</th>
-                    <th className="pb-3 text-right font-medium">P95</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latencyBreakdown.map((item) => (
-                    <tr
-                      key={item.model}
-                      className="border-b last:border-0"
-                    >
-                      <td className="py-4 font-medium">{item.model}</td>
-                      <td className="py-4 text-muted-foreground">
-                        {item.provider}
-                      </td>
-                      <td className="py-4 text-right tabular-nums">
-                        {item.requests}
-                      </td>
-                      <td className="py-4 text-right tabular-nums">
-                        {item.avg.toLocaleString()} ms
-                      </td>
-                      <td className="py-4 text-right tabular-nums">
-                        {item.p95.toLocaleString()} ms
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      <LatencySection/>
 
       {/* Reliability section */}
-      <section className="space-y-4">
+      {/* <section className="space-y-4">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-muted-foreground" />
           <SectionHeading
@@ -482,9 +258,7 @@ export default function AnalyticsPage() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Success rate
-                  </span>
+                  <span className="text-muted-foreground">Success rate</span>
                   <span className="font-medium">97%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -496,8 +270,7 @@ export default function AnalyticsPage() {
                 variant="outline"
                 className="w-full"
                 onClick={() => {
-                  window.location.href =
-                    "/dashboard/traces?status=ERROR";
+                  window.location.href = "/dashboard/traces?status=ERROR";
                 }}
               >
                 Investigate failed traces
@@ -505,10 +278,10 @@ export default function AnalyticsPage() {
             </CardContent>
           </Card>
         </div>
-      </section>
+      </section> */}
 
       {/* Cost section */}
-      <section className="space-y-4">
+      {/* <section className="space-y-4">
         <div className="flex items-center gap-2">
           <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
           <SectionHeading
@@ -662,10 +435,7 @@ export default function AnalyticsPage() {
                 </thead>
                 <tbody>
                   {costBreakdown.map((item) => (
-                    <tr
-                      key={item.model}
-                      className="border-b last:border-0"
-                    >
+                    <tr key={item.model} className="border-b last:border-0">
                       <td className="py-4 font-medium">{item.model}</td>
                       <td className="py-4 text-muted-foreground">
                         {item.provider}
@@ -686,7 +456,7 @@ export default function AnalyticsPage() {
             </div>
           </CardContent>
         </Card>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <div className="flex items-center justify-between border-t pt-4 text-xs text-muted-foreground">

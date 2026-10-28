@@ -1,11 +1,11 @@
 import OverviewCards from "@/components/dashboard/OverviewCards";
-import { TraceVolumeRange } from "./types";
+import { TraceVolumeRange, validRanges } from "./types";
 import VolumeRangeSelector from "@/components/dashboard/VolumeRangeSelector";
 import TraceVolumeChart from "@/components/dashboard/TraceVolumeChart";
 import { resolveSelectedProject } from "@/services/api/projects";
 import { getAnalyticsOverview, getAnalyticsVolume } from "@/services/api/analytics";
 
-const validRanges: TraceVolumeRange[] = ["24h", "7d", "30d"];
+
 
 const DashboardPage = async ({
   searchParams,

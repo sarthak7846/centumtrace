@@ -21,7 +21,7 @@ export const generateTrace = async (
   config: SimulationConfig,
 ) => {
   const trace = observe.startTrace({
-    model: "gpt-4",
+    model: "gpt-5.6-sol",
     provider: "openai",
   });
 

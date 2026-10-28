@@ -30,6 +30,7 @@ export type AnalyticsVolume = {
 };
 
 export type TraceVolumeRange = "24h" | "7d" | "30d";
+export const validRanges: TraceVolumeRange[] = ["24h", "7d", "30d"];
 
 export type Trace = {
   traceId: string;

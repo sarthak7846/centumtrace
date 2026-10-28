@@ -22,6 +22,8 @@ export class Trace {
     try {
       const result = await fn();
 
+      console.log("llm response", result);
+
       const extracted = this.adapter.extract(input, result);
 
       const res = await this.end({

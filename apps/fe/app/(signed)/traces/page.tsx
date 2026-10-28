@@ -245,7 +245,7 @@ export default async function TracesPage({
                   <TableRow key={trace.traceId}>
                     <TableCell className="min-w-48">
                       <Link
-                        href={`/dashboard/traces/${encodeURIComponent(trace.traceId)}?projectId=${encodeURIComponent(selectedProject.id)}`}
+                        href={`/traces/${encodeURIComponent(trace.traceId)}?projectId=${encodeURIComponent(selectedProject.id)}`}
                         className="font-mono text-sm font-medium hover:underline"
                       >
                         {trace.traceId}
