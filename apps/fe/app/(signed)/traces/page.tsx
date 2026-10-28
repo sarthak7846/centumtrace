@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { SearchParams } from "../dashboard/types";
-import { getAllTraces, getCurrentUser, getProjects } from "../dashboard/actions";
 import TraceFilters from "@/components/dashboard/TraceFilters";
 import { Activity, Layers3, ListFilter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { resolveSelectedProject } from "@/services/api/projects";
+import { getAllTraces } from "@/services/api/traces";
 
 function formatLatency(latencyMs: number | null) {
   if (latencyMs == null) return "—";
@@ -45,22 +46,11 @@ export default async function TracesPage({
   searchParams: SearchParams;
 }) {
   const params = await searchParams;
-  const user = await getCurrentUser();
-  const organization = user.memberships?.[0]?.organization;
+  const { selectedProject } = await resolveSelectedProject(params.projectId);
 
-  if (!organization) {
-    return <p>No organization found.</p>;
+  if (!selectedProject) {
+    return <p>Create a project to view analytics.</p>;
   }
-
-  const projects = await getProjects(organization.id);
-
-  if (!projects.length) {
-    return <p>Create a project before viewing traces.</p>;
-  }
-
-  // Only allow a project the user can access.
-  const selectedProject =
-    projects.find((project) => project.id === params.projectId) ?? projects[0];
 
   const page = Math.max(1, Number(params.page) || 1);
   const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
@@ -111,10 +101,10 @@ export default async function TracesPage({
 
   const result = await getAllTraces(selectedProject.id, query);
 
-  function pageUrl(nextPage: number) {
+  function pageUrl(nextPage: number, selectedProjectId: string) {
     const next = new URLSearchParams(query);
     next.set("page", String(nextPage));
-    next.set("projectId", selectedProject.id);
+    next.set("projectId", selectedProjectId);
     return `/dashboard/traces?${next.toString()}`;
   }
 
@@ -141,11 +131,6 @@ export default async function TracesPage({
             Inspect, filter, and debug your LLM executions.
           </p>
         </div>
-
-        <Badge variant="outline" className="w-fit gap-2 px-3 py-1.5">
-          <span className="size-2 rounded-full bg-emerald-500" />
-          {selectedProject.name}
-        </Badge>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -345,14 +330,14 @@ export default async function TracesPage({
               <Link
                 aria-disabled={page <= 1}
                 className={`rounded border px-3 py-2 ${page <= 1 ? "pointer-events-none opacity-40" : ""}`}
-                href={pageUrl(page - 1)}
+                href={pageUrl(page - 1, selectedProject.id)}
               >
                 Previous
               </Link>
               <Link
                 aria-disabled={page >= result.totalPages}
                 className={`rounded border px-3 py-2 ${page >= result.totalPages ? "pointer-events-none opacity-40" : ""}`}
-                href={pageUrl(page + 1)}
+                href={pageUrl(page + 1, selectedProject.id)}
               >
                 Next
               </Link>

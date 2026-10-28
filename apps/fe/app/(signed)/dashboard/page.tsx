@@ -1,14 +1,9 @@
-import ProjectSelector from "@/components/dashboard/ProjectSelector";
-import {
-  getAnalyticsOverview,
-  getAnalyticsVolume,
-  getCurrentUser,
-  getProjects,
-} from "./actions";
 import OverviewCards from "@/components/dashboard/OverviewCards";
 import { TraceVolumeRange } from "./types";
 import VolumeRangeSelector from "@/components/dashboard/VolumeRangeSelector";
 import TraceVolumeChart from "@/components/dashboard/TraceVolumeChart";
+import { resolveSelectedProject } from "@/services/api/projects";
+import { getAnalyticsOverview, getAnalyticsVolume } from "@/services/api/analytics";
 
 const validRanges: TraceVolumeRange[] = ["24h", "7d", "30d"];
 
@@ -17,20 +12,12 @@ const DashboardPage = async ({
 }: {
   searchParams: Promise<{ projectId?: string; range?: string }>;
 }) => {
-  const user = await getCurrentUser();
+  const params = await searchParams;
+  const { selectedProject } = await resolveSelectedProject(params.projectId);
 
-  const organization = user.memberships[0]?.organization;
-  if (!organization) throw new Error("No organization found");
-
-  const projects = await getProjects(organization.id);
-  if (projects.length === 0) {
+  if (!selectedProject) {
     return <p>No projects yet. Create your first project.</p>;
   }
-
-  const params = await searchParams;
-
-  const selectedProject =
-    projects.find((project) => project.id === params.projectId) ?? projects[0];
 
   const range = validRanges.includes(params.range as TraceVolumeRange)
     ? (params.range as TraceVolumeRange)
@@ -49,11 +36,6 @@ const DashboardPage = async ({
           Monitor your LLM application's performance and usage.
         </p>
       </div>
-
-      <ProjectSelector
-        projects={projects}
-        selectedProjectId={selectedProject.id}
-      />
 
       <OverviewCards analyticsOverview={overview} />
 
