@@ -20,9 +20,12 @@ export const generateTrace = async (
   observe: Observe,
   config: SimulationConfig,
 ) => {
+  const model = "gpt-5.4-mini-2026-03-17";
+  const provider = "openai";
+
   const trace = observe.startTrace({
-    model: "gpt-5.6-sol",
-    provider: "openai",
+    model,
+    provider,
   });
 
   const response = await trace.capture(
@@ -55,7 +58,7 @@ export const generateTrace = async (
         instructions: null,
         max_output_tokens: null,
         max_tool_calls: null,
-        model: "gpt-5.6-sol",
+        model,
         moderation: null,
         output: [
           {
