@@ -1,3 +1,4 @@
+import NavigationProgress from "@/components/NavigationProgress";
 import Sidebar from "@/components/Sidebar";
 import SignedHeader from "@/components/SignedHeader";
 import { getSignedInProjects } from "@/services/api/projects";
@@ -5,26 +6,21 @@ import { getSignedInProjects } from "@/services/api/projects";
 const SignedLayout = async ({ children }: { children: React.ReactNode }) => {
   const projects = await getSignedInProjects();
 
-  if (projects.length === 0) {
-    return (
-      <div className="bg-background min-h-screen">
-        <Sidebar />
-        <div className="pl-56">
-          <SignedHeader projects={projects} />
-          <main className="p-6">
-            <p>No projects yet. Create your first project.</p>
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="bg-background min-h-screen">
-      <Sidebar />
+      <NavigationProgress/>
+      <Sidebar projects={projects} />
       <div className="pl-56">
-        <SignedHeader projects={projects} />
-        <main className="min-h-[calc(100vh-3.5rem)] p-6">{children}</main>
+        <SignedHeader />
+        <main
+          className={`p-6 ${projects.length !== 0 && "min-h-[calc(100vh-3.5rem)]"}`}
+        >
+          {projects.length === 0 ? (
+            <p>No projects yet. Create your first project.</p>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );

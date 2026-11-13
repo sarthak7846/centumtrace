@@ -1,50 +1,30 @@
 "use client";
 
+import { Project } from "@/app/(signed)/dashboard/types";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import ProjectSelector from "./dashboard/ProjectSelector";
 
 const navItems = [
   {
     href: "/dashboard",
     label: "Dashboard",
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-        />
-      </svg>
-    ),
+    icon: "grid_view",
   },
   {
     href: "/traces",
-    label: "Traces",
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        />
-      </svg>
-    ),
+    label: "LLM Traces",
+    icon: "reorder",
   },
   {
     href: "/analytics",
     label: "Analytics",
-    icon: (
-      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-        />
-      </svg>
-    ),
+    icon: "analytics",
+  },
+  {
+    href: "/settings",
+    label: "Settings",
+    icon: "tune",
   },
   // {
   //   href: "/status-page",
@@ -76,56 +56,156 @@ const navItems = [
   // },
 ] as const;
 
-const Sidebar = () => {
+const Sidebar = ({ projects }: { projects: Project[] }) => {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
+
+  const selectedProject =
+    projects.find((project) => project.id === projectId) ?? projects[0];
 
   return (
-    <aside className="border-sidebar-border bg-sidebar text-sidebar-foreground fixed inset-y-0 left-0 z-20 flex w-56 flex-col border-r">
-      <div className="border-sidebar-border flex h-14 shrink-0 items-center justify-center gap-2 border-b px-4">
-        <div className="flex items-center justify-between">
-          {/* <span className="relative mr-3 flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
-          </span> */}
-          <Link href="/" className="font-semibold tracking-tight">
-            CentumTrace
-          </Link>
-        </div>
-      </div>
-
-      <nav className="flex-1 space-y-0.5 overflow-auto p-3">
-        {navItems.map(({ href, label, icon }) => {
-          const isActive = pathname === href || pathname.startsWith(href + "/");
-          return (
+    <aside className="anim-sidebar fixed left-0 top-0 h-full w-64 bg-surface-container-low/95 backdrop-blur-xl z-50 flex flex-col justify-between border-r border-surface-container-high/40 shadow-[0_1px_16px_rgba(0,0,0,0.35)]">
+      <div className="flex flex-col">
+        {/* <!-- Brand Header --> */}
+        <div className="h-16 px-space-md flex items-center justify-between border-b border-surface-container-high/30">
+          <div className="flex items-center gap-space-sm group cursor-pointer">
+            {/* <div className="relative flex items-center justify-center">
+              <img
+                alt="Aura Logo"
+                className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                src="https://lh3.googleusercontent.com/aida/AEtjO1XZcW_7YITV1iBBdCu31axxFRzoWEmz4Mf5psGDlavFhgzVFH1ANO0oes3E66jLwbK5_x1-ATFaBcYoRtdBktVhlSjdzm3YwzpEncOKTtcJXZ6NmPfwsAq5tH55uLBMf5IC6Zloq1LTvuTsKO-wHwKmQkEPs48Q1mfFqGhXah0JortEsKa-kRuKbshsvPDaYFcinln3Xk0U1H3ZhUwGoDA2HWAT5XBEQkmkceAXF87p_A5go11_PviuuZk"
+              />
+            </div> */}
             <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
-              }`}
+              href="/"
+              className="font-title-md text-title-md font-bold tracking-tight text-on-surface transition-colors duration-200 group-hover:text-primary"
             >
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
-                  isActive
-                    ? "bg-sidebar-primary/15 text-sidebar-primary"
-                    : "text-sidebar-foreground/70"
-                }`}
-              >
-                {icon}
-              </span>
-              {label}
+              Centum Trace
             </Link>
-          );
-        })}
-      </nav>
-
-      {/* <div className="border-sidebar-border border-t p-3">
-        <p className="text-sidebar-foreground/60 px-3 text-xs">
-          Uptime monitoring for your services
-        </p>
-      </div> */}
+          </div>
+          {/* <span className="font-caption text-caption px-space-xs py-0.5 rounded bg-surface-container-high text-primary border border-primary/20 shadow-xs">
+            v2.4
+          </span> */}
+        </div>
+        {/* <!-- Project Selector Dropdown Button --> */}
+        <ProjectSelector
+          projects={projects}
+          selectedProjectId={selectedProject.id}
+        />
+        {/* <!-- Navigation links with smooth hover pill transitions --> */}
+        <nav
+          className="flex flex-col gap-1 px-space-md py-space-xs"
+          id="sidebar-nav"
+        >
+          {navItems.map(({ href, label, icon }) => {
+            const isActive =
+              pathname === href || pathname.startsWith(href + "/");
+            return (
+              <Link
+                href={href}
+                key={href}
+                className={`nav-item flex items-center gap-space-sm px-3 py-2 rounded-lg transition-all duration-200 group ${isActive ? "bg-primary-container text-on-primary-container font-semibold shadow-sm shadow-primary-container/30 relative overflow-hidden" : "text-on-surface-variant hover:bg-surface-container-high/80 hover:text-on-surface font-label-md text-label-md"}`}
+              >
+                <span
+                  className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${!isActive && "group-hover:text-primary transition-colors"}`}
+                >
+                  {icon}
+                </span>
+                <span>{label}</span>
+              </Link>
+            );
+          })}
+          {/* <a
+            className="nav-item flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high/80 hover:text-on-surface transition-all duration-200 font-label-md text-label-md group"
+            data-path="llm-traces"
+            href="#"
+          >
+            <span className="material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors">
+              reorder
+            </span>
+            <span>LLM Traces</span>
+          </a>
+          <a
+            className="nav-item flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high/80 hover:text-on-surface transition-all duration-200 font-label-md text-label-md group"
+            data-path="evaluations"
+            href="#"
+          >
+            <span className="material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors">
+              fact_check
+            </span>
+            <span>Evaluations</span>
+          </a>
+          <a
+            className="nav-item flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high/80 hover:text-on-surface transition-all duration-200 font-label-md text-label-md group"
+            data-path="latency-and-cost"
+            href="#"
+          >
+            <span className="material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors">
+              payments
+            </span>
+            <span>Latency &amp; Cost</span>
+          </a>
+          <a
+            className="nav-item flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high/80 hover:text-on-surface transition-all duration-200 font-label-md text-label-md group"
+            data-path="guardrails"
+            href="#"
+          >
+            <span className="material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors">
+              shield_lock
+            </span>
+            <span>Guardrails</span>
+          </a>
+          <a
+            className="nav-item flex items-center gap-space-sm px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high/80 hover:text-on-surface transition-all duration-200 font-label-md text-label-md group"
+            data-path="settings"
+            href="#"
+          >
+            <span className="material-symbols-outlined text-[20px] text-outline group-hover:text-primary transition-colors">
+              tune
+            </span>
+            <span>Settings</span>
+          </a> */}
+        </nav>
+      </div>
+      {/* <!-- Bottom Telemetry Card: Quota with shimmer --> */}
+      <div className="px-space-md pb-space-lg flex flex-col gap-space-sm">
+        {/* <div className="p-3.5 rounded-xl bg-surface-container/60 border border-outline-variant/30 flex flex-col gap-2 relative overflow-hidden group hover:border-tertiary/40 transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="font-caption text-caption text-outline font-medium tracking-wide">
+              Observability Quota
+            </span>
+            <span className="font-caption text-caption text-tertiary font-bold px-1.5 py-0.5 rounded bg-tertiary/10">
+              78%
+            </span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+            <div
+              className="h-full rounded-full w-[78%] shimmer-progress transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(76,215,246,0.5)]"
+              id="quota-fill-bar"
+            ></div>
+          </div>
+          <div className="flex items-center justify-between font-caption text-caption text-on-surface-variant">
+            <span>782k / 1M token calls</span>
+            <span className="text-tertiary font-mono text-[10px]">Active</span>
+          </div>
+        </div> */}
+        <a
+          className="flex items-center justify-between px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all duration-200 font-label-sm text-label-sm group border border-transparent hover:border-outline-variant/30"
+          data-path="documentation"
+          href="#"
+        >
+          <span className="flex items-center gap-space-xs">
+            <span className="material-symbols-outlined text-[18px] group-hover:text-primary transition-colors">
+              menu_book
+            </span>
+            Documentation
+          </span>
+          <span className="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">
+            north_east
+          </span>
+        </a>
+      </div>
     </aside>
   );
 };

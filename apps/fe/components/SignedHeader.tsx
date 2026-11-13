@@ -2,18 +2,10 @@
 
 import { useRef, useEffect, useState } from "react";
 import { signOutAction } from "@/app/auth/actions";
-import ProjectSelector from "./dashboard/ProjectSelector";
-import { Project } from "@/app/(signed)/dashboard/types";
-import { useSearchParams } from "next/navigation";
 
-const SignedHeader = ({ projects }: { projects: Project[] }) => {
+const SignedHeader = () => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const searchParams = useSearchParams();
-  const projectId = searchParams.get("projectId");
-
-  const selectedProject =
-    projects.find((project) => project.id === projectId) ?? projects[0];
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -27,10 +19,6 @@ const SignedHeader = ({ projects }: { projects: Project[] }) => {
 
   return (
     <header className="border-sidebar-border bg-background/95 supports-backdrop-filter:bg-background/80 sticky top-0 z-10 flex h-14 shrink-0 items-center justify-end border-b px-6 backdrop-blur">
-      <ProjectSelector
-        projects={projects}
-        selectedProjectId={selectedProject.id}
-      />
       <div className="relative" ref={menuRef}>
         <button
           type="button"

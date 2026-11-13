@@ -139,6 +139,24 @@
   --spacing-margin: 2rem;
 }
 
+@keyframes progress-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(150%);
+  }
+
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.animate-progress-bar {
+  animation: progress-bar 1.2s ease-in-out infinite;
+}
+
 /* Ambient Motion & Background Glows */
 @keyframes floatOrb1 {
   0%, 100% { transform: translate(0, 0) scale(1); }
