@@ -70,13 +70,9 @@ const Sidebar = ({ projects }: { projects: Project[] }) => {
         {/* <!-- Brand Header --> */}
         <div className="h-16 px-space-md flex items-center justify-between border-b border-surface-container-high/30">
           <div className="flex items-center gap-space-sm group cursor-pointer">
-            {/* <div className="relative flex items-center justify-center">
-              <img
-                alt="Aura Logo"
-                className="h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
-                src="https://lh3.googleusercontent.com/aida/AEtjO1XZcW_7YITV1iBBdCu31axxFRzoWEmz4Mf5psGDlavFhgzVFH1ANO0oes3E66jLwbK5_x1-ATFaBcYoRtdBktVhlSjdzm3YwzpEncOKTtcJXZ6NmPfwsAq5tH55uLBMf5IC6Zloq1LTvuTsKO-wHwKmQkEPs48Q1mfFqGhXah0JortEsKa-kRuKbshsvPDaYFcinln3Xk0U1H3ZhUwGoDA2HWAT5XBEQkmkceAXF87p_A5go11_PviuuZk"
-              />
-            </div> */}
+            <span className="material-symbols-outlined text-emerald-400 text-[20px]">
+            legend_toggle
+          </span>
             <Link
               href="/"
               className="font-title-md text-title-md font-bold tracking-tight text-on-surface transition-colors duration-200 group-hover:text-primary"

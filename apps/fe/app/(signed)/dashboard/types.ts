@@ -11,6 +11,28 @@ export type AnalyticsOverview = {
   totalCost: number;
 };
 
+export type OverviewMetrics = {
+  totalTraces: number;
+  errorRate: number;
+  averageLatencyMs: number;
+  totalCost: number;
+  totalTokens: number;
+};
+
+export type ReliabilityMetrics = {
+  successfulTraces: number;
+  errorTraces: number;
+  totalTraces: number;
+  errorRate: number;
+};
+
+export type LatencyMetrics = {
+  p50LatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
+  totalTraces: number;
+};
+
 export type Project = {
   id: string;
   organizationId: string;

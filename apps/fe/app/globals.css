@@ -249,6 +249,127 @@
   background-size: 28px 28px;
 }
 
+/* Orchestrated Cascade Keyframes */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRightIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatAmbient1 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(45px, 25px) scale(1.1); }
+}
+
+@keyframes floatAmbient2 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(-35px, -30px) scale(1.15); }
+}
+
+@keyframes shimmerGlow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes drawStroke {
+  0% {
+    stroke-dashoffset: 1600;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pingPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  70% { transform: scale(2.4); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+@keyframes radarWave {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes syncSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Staggered entrance animation delays */
+.anim-sidebar { animation: slideRightIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.anim-header { animation: slideDownIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+
+.anim-entry-1 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
+.anim-entry-2 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
+.anim-entry-3 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
+.anim-entry-4 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
+.anim-entry-5 { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+
+/* Interactive glowing card states */
+.interactive-card {
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.28s ease, background-color 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.interactive-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(192, 193, 255, 0.22);
+  box-shadow: 0 12px 30px -8px rgba(15, 19, 28, 0.85), 0 0 20px -3px rgba(99, 102, 241, 0.16);
+}
+
+/* Ambient cosmic glow bubbles */
+.cosmic-orb-1 {
+  animation: floatAmbient1 16s ease-in-out infinite;
+}
+.cosmic-orb-2 {
+  animation: floatAmbient2 20s ease-in-out infinite;
+}
+
+/* Shimmer on Quota progress bar */
+.shimmer-progress {
+  background: linear-gradient(90deg, #4cd7f6 0%, #a5f3fc 50%, #4cd7f6 100%);
+  background-size: 200% 100%;
+  animation: shimmerGlow 3.5s linear infinite;
+}
+
+/* Chart Path animation */
+.svg-animate-stroke {
+  stroke-dasharray: 1600;
+  stroke-dashoffset: 1600;
+  animation: drawStroke 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+
+.radar-ring {
+  animation: radarWave 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
 /* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
@@ -282,4 +403,5 @@ body {
   color: var(--foreground);
   margin: 0;
   min-height: 100vh;
+  overflow-anchor: none;
 }

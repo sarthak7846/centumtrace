@@ -64,6 +64,7 @@ export async function getAccessToken() {
 }
 
 export async function signOutAction() {
+  console.log("Sign out action triggered");
   const cookieStore = await cookies();
   cookieStore.delete("token");
   redirect("/auth/signin");

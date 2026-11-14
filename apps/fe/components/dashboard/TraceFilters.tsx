@@ -42,7 +42,7 @@ export default function TraceFilters({ projectId }: { projectId: string }) {
     params.set("sortBy", searchParams.get("sortBy") ?? "createdAt");
     params.set("sortOrder", searchParams.get("sortOrder") ?? "desc");
 
-    router.push(`/dashboard/traces?${params.toString()}`);
+    router.push(`/traces?${params.toString()}`);
   }
 
   return (
