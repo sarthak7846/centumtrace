@@ -37,11 +37,20 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TraceVolumeRange, validRanges } from "../dashboard/types";
+import { Range, validRanges } from "../dashboard/types";
 import { resolveSelectedProject } from "@/services/api/projects";
-import { getAnalyticsOverview } from "@/services/api/analytics";
+import {
+  getAnalyticsOverview,
+  getCostBreakdown,
+  getCostTrend,
+  getErrorsBreakdown,
+  getLatencyBreakdown,
+  getLatencyTrend,
+} from "@/services/api/analytics";
 import SummaryMetrics from "@/components/analytics/SummaryMetrics";
 import LatencySection from "@/components/analytics/LatencySection";
+import PerformanceOverviewMetricCards from "@/components/analytics/PerformanceOverviewMetricCards";
+import LatencyTrendChart from "@/components/analytics/LatencyTrendChart";
 
 const errorData = [
   { type: "Rate limit", count: 4, fill: "#f59e0b" },
@@ -76,8 +85,6 @@ const costBreakdown = [
   },
 ];
 
-
-
 function ChartEmptyLabel() {
   return (
     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
@@ -89,7 +96,7 @@ function ChartEmptyLabel() {
 export default async function AnalyticsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ projectId?: string; range?: TraceVolumeRange }>;
+  searchParams: Promise<{ projectId?: string; range?: Range }>;
 }) {
   const params = await searchParams;
 
@@ -99,373 +106,766 @@ export default async function AnalyticsPage({
     return <p>No projects yet. Create your first project.</p>;
   }
 
-  const range = validRanges.includes(params.range as TraceVolumeRange)
-    ? (params.range as TraceVolumeRange)
+  const range = validRanges.includes(params.range as Range)
+    ? (params.range as Range)
     : "7d";
 
-  const [overview] = await Promise.all([
+  const [
+    overview,
+    latencyTrend,
+    latencyBreakdown,
+    errorsBreakdown,
+    costTrend,
+    costBreakdown,
+  ] = await Promise.all([
     getAnalyticsOverview(selectedProject.id),
+    getLatencyTrend(selectedProject.id, range),
+    getLatencyBreakdown(selectedProject.id, range),
+    getErrorsBreakdown(selectedProject.id, range),
+    getCostTrend(selectedProject.id, range),
+    getCostBreakdown(selectedProject.id, range),
   ]);
 
+  const { totalTokens, totalCost, errorRate, p95LatencyMs } = overview;
+
+  const performanceMetrics = {
+    p95LatencyMs,
+    errorRate,
+    totalCost,
+    totalTokens,
+  };
+
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-8 p-4 md:p-8">
-      {/* Page header */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border bg-muted/40 p-2">
-              <Activity className="h-5 w-5" />
+    <div className="relative z-10 pt-14">
+      <main className="relative w-full px-8 bg-transparent min-h-screen">
+        <div className="flex flex-col w-full pb-16">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md mb-space-lg">
+            <div className="flex flex-col gap-space-xs">
+              <div className="flex items-center gap-space-sm">
+                <span className="font-headline-lg text-headline-lg text-[#f8fafc] font-bold tracking-tight">
+                  Analytics
+                </span>
+              </div>
+              <p className="font-body-md text-body-md text-slate-400">
+                Understand your LLM performance, reliability, and spending.
+              </p>
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Understand your LLM performance, reliability, and spending.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" className="gap-2" disabled>
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-
-          <Button variant="outline" className="gap-2">
-            <a href="/dashboard/traces">View traces</a>
-          </Button>
-
-          <div className="relative">
-            <select
-              value={range}
-              // onChange={(event) => {}}
-              className="h-9 appearance-none rounded-md border border-input bg-background py-1 pl-3 pr-9 text-sm outline-none focus:ring-2 focus:ring-ring"
-              aria-label="Analytics date range"
-            >
-              <option value="24h">Last 24 hours</option>
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          </div>
-        </div>
-      </div>
-
-      {/* Summary metrics */}
-      <SummaryMetrics range={range} overview={overview} />
-
-      {/* Latency section */}
-      <LatencySection/>
-
-      {/* Reliability section */}
-      {/* <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-          <SectionHeading
-            title="Error analysis"
-            description="Understand which errors are affecting your LLM requests."
-          />
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-2">
-          <Card className="border-border/70 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Errors by type</CardTitle>
-              <CardDescription>
-                Distribution of failed traces by error category.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-65">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={errorData}
-                    layout="vertical"
-                    margin={{ top: 8, right: 24, bottom: 0, left: 8 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      horizontal={false}
-                      stroke="var(--border)"
-                    />
-                    <XAxis
-                      type="number"
-                      allowDecimals={false}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="type"
-                      width={90}
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Bar
-                      dataKey="count"
-                      name="Failed traces"
-                      radius={[0, 5, 5, 0]}
-                      barSize={28}
-                    >
-                      {errorData.map((item) => (
-                        <Cell key={item.type} fill={item.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Reliability summary</CardTitle>
-              <CardDescription>
-                Current failure distribution for the selected project.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-red-500/10 p-2">
-                    <AlertTriangle className="h-4 w-4 text-red-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Failed traces</p>
-                    <p className="text-xs text-muted-foreground">
-                      Requests with errors
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xl font-semibold">6</span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-emerald-500/10 p-2">
-                    <Zap className="h-4 w-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Successful traces</p>
-                    <p className="text-xs text-muted-foreground">
-                      Requests completed successfully
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xl font-semibold">194</span>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Success rate</span>
-                  <span className="font-medium">97%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div className="h-full w-[97%] rounded-full bg-emerald-500" />
-                </div>
-              </div>
-
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  window.location.href = "/dashboard/traces?status=ERROR";
-                }}
+            {/* <!-- Action Toolbar --> */}
+            {/* <div className="flex items-center gap-space-sm flex-wrap"> */}
+            {/* <!-- Time Range Dropdown --> */}
+            {/* <div className="relative inline-block text-left">
+                <button
+                  className="group flex items-center gap-space-xs px-space-sm py-2 rounded-lg bg-[#131828] border border-[#23293d] hover:bg-[#1a2136] hover:border-indigo-500/40 active:scale-[0.98] text-[#f8fafc] transition-all font-label-md text-label-md shadow-sm"
+                  id="timeRangeBtn"
+                  type="button"
+                >
+                  <span className="material-symbols-outlined text-slate-400 group-hover:text-indigo-400 text-base transition-colors">
+                    calendar_today
+                  </span>
+                  <span id="currentTimeRange">Last 7 days</span>
+                  <span className="material-symbols-outlined text-slate-400 text-sm group-hover:translate-y-0.5 transition-transform">
+                    expand_more
+                  </span>
+                </button>
+              </div> */}
+            {/* <!-- Trace Navigation Button --> */}
+            {/* <button
+                className="group flex items-center gap-space-xs px-space-sm py-2 rounded-lg bg-[#131828] border border-[#23293d] hover:bg-[#1a2136] hover:border-indigo-500/40 active:scale-[0.98] text-slate-200 font-label-md text-label-md transition-all shadow-sm"
+                type="button"
               >
-                Investigate failed traces
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </section> */}
-
-      {/* Cost section */}
-      {/* <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
-          <SectionHeading
-            title="Cost and token usage"
-            description="Monitor spending and understand which models consume your budget."
+                <span className="material-symbols-outlined text-indigo-400 text-base group-hover:rotate-45 transition-transform duration-300">
+                  conversion_path
+                </span>
+                <span>View traces</span>
+              </button> */}
+            {/* <!-- Export CTA --> */}
+            {/* <button
+                className="group relative overflow-hidden flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-linear-to-r from-primary to-indigo-600 text-white font-label-md text-label-md hover:from-indigo-500 hover:to-indigo-700 active:scale-[0.97] transition-all shadow-md shadow-indigo-600/30 hover:shadow-indigo-500/50 border border-indigo-400/20"
+                id="exportBtn"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-base group-hover:-translate-y-0.5 transition-transform">
+                  download
+                </span>
+                <span id="exportText">Export</span>
+              </button> */}
+            {/* </div> */}
+          </div>
+          <div className="flex flex-col gap-space-md mb-space-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-title-md text-title-md text-[#f8fafc] font-semibold">
+                  Performance overview
+                </h2>
+                <p className="font-label-sm text-label-sm text-slate-400">
+                  A snapshot of your project's LLM activity.
+                </p>
+              </div>
+              {/* <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#111625] border border-[#23293d] text-indigo-300 font-caption text-caption font-semibold">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                7-day window
+              </div> */}
+            </div>
+            {/* <!-- 4 Key Metric Cards --> */}
+            <PerformanceOverviewMetricCards
+              performanceMetrics={performanceMetrics}
+            />
+          </div>
+          <LatencyTrendChart
+            initialLatencyTrend={latencyTrend}
+            selectedProjectId={selectedProject.id}
           />
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-2">
-          <Card className="border-border/70 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Cost over time</CardTitle>
-              <CardDescription>
-                Daily spending across all model requests.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-70">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={costTrend}
-                    margin={{ top: 8, right: 8, bottom: 0, left: -10 }}
+          <div className="flex flex-col gap-space-md mb-space-xl">
+            <div className="flex flex-col gap-space-xs">
+              <h2 className="font-title-md text-title-md text-[#f8fafc] font-semibold">
+                Latency performance
+              </h2>
+              <p className="font-label-sm text-label-sm text-slate-400">
+                Track response times and identify slower model requests.
+              </p>
+            </div>
+            <div className="rounded-xl bg-[#0f1424] border border-[#1e263d] p-space-lg shadow-xl hover:border-[#283552] transition-colors flex flex-col gap-space-md relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+                <div className="flex items-center gap-space-xs">
+                  <span className="material-symbols-outlined text-indigo-400 text-lg">
+                    timeline
+                  </span>
+                  <h3 className="font-label-md text-label-md font-semibold text-[#f8fafc]">
+                    Latency over time
+                  </h3>
+                  <span className="hidden md:inline font-caption text-caption text-slate-400">
+                    — Compare median latency against the slowest 5% and 1% of
+                    requests.
+                  </span>
+                </div>
+                <span className="font-caption text-caption text-slate-500 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>{" "}
+                  Live Scrubbing Enabled • ms
+                </span>
+              </div>
+              {/* <!-- SVG Chart Wrapper --> */}
+              <div
+                className="relative w-full h-72 pt-space-xs select-none cursor-crosshair"
+                id="chartContainer"
+              >
+                {/* <!-- Floating Glass Tooltip --> */}
+                <div
+                  className="absolute z-30 pointer-events-none opacity-0 transition-all duration-150 bg-[#10162a]/95 backdrop-blur-md border border-[#2a3656] text-[#f8fafc] p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] font-caption text-caption flex flex-col gap-1.5 w-44 -translate-x-1/2 -translate-y-full mb-4"
+                  id="chartTooltip"
+                  style={{
+                    transform: "translate(-50%, -100%)",
+                    opacity: 0,
+                    left: "186px",
+                    top: "36%",
+                  }}
+                >
+                  <div className="font-semibold text-white border-b border-[#222c44] pb-1 flex items-center justify-between">
+                    <span id="tooltipDate">Oct 22, 2024</span>
+                    <span className="text-[10px] text-slate-400 font-mono">
+                      200 runs
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-amber-400">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                      P99
+                    </span>
+                    <span
+                      className="font-bold font-mono text-xs"
+                      id="tooltipP99"
+                    >
+                      1,410 ms
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-indigo-300">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                      P95
+                    </span>
+                    <span
+                      className="font-bold font-mono text-xs"
+                      id="tooltipP95"
+                    >
+                      1,180 ms
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-cyan-300">
+                    <span className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                      P50
+                    </span>
+                    <span
+                      className="font-bold font-mono text-xs"
+                      id="tooltipP50"
+                    >
+                      840 ms
+                    </span>
+                  </div>
+                </div>
+                {/* <!-- Inline SVG Visualization --> */}
+                <svg
+                  className="w-full h-full overflow-visible"
+                  preserveAspectRatio="none"
+                  viewBox="0 0 760 220"
+                >
+                  <defs>
+                    {/* <!-- Background vertical track highlights --> */}
+                    <linearGradient id="p95Glow" x1="0" x2="0" y1="0" y2="1">
+                      <stop
+                        offset="0%"
+                        stop-color="#6366f1"
+                        stop-opacity="0.25"
+                      ></stop>
+                      <stop
+                        offset="100%"
+                        stop-color="#6366f1"
+                        stop-opacity="0.0"
+                      ></stop>
+                    </linearGradient>
+                    <linearGradient id="p50Glow" x1="0" x2="0" y1="0" y2="1">
+                      <stop
+                        offset="0%"
+                        stop-color="#06b6d4"
+                        stop-opacity="0.18"
+                      ></stop>
+                      <stop
+                        offset="100%"
+                        stop-color="#06b6d4"
+                        stop-opacity="0.0"
+                      ></stop>
+                    </linearGradient>
+                    {/* <!-- Soft node filter glow --> */}
+                    <filter
+                      height="200%"
+                      id="glowAmber"
+                      width="200%"
+                      x="-50%"
+                      y="-50%"
+                    >
+                      <feGaussianBlur
+                        in="SourceGraphic"
+                        stdDeviation="3"
+                      ></feGaussianBlur>
+                      <feMerge>
+                        <feMergeNode></feMergeNode>
+                        <feMergeNode in="SourceGraphic"></feMergeNode>
+                      </feMerge>
+                    </filter>
+                    <filter
+                      height="200%"
+                      id="glowIndigo"
+                      width="200%"
+                      x="-50%"
+                      y="-50%"
+                    >
+                      <feGaussianBlur
+                        in="SourceGraphic"
+                        stdDeviation="3.5"
+                      ></feGaussianBlur>
+                      <feMerge>
+                        <feMergeNode></feMergeNode>
+                        <feMergeNode in="SourceGraphic"></feMergeNode>
+                      </feMerge>
+                    </filter>
+                  </defs>
+                  {/* <!-- Horizontal Grid Guides --> */}
+                  <g
+                    className="stroke-[#1e2538]"
+                    stroke-dasharray="4 4"
+                    stroke-width="1"
                   >
-                    <defs>
-                      <linearGradient
-                        id="costGradient"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="0%"
-                          stopColor="#6366f1"
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#6366f1"
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="var(--border)"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                      tickFormatter={(value) => `$${value.toFixed(3)}`}
-                    />
-                    <Tooltip
-                      contentStyle={tooltipStyle}
-                      formatter={(value) => [
-                        `$${Number(value).toFixed(6)}`,
-                        "Cost",
-                      ]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="cost"
-                      name="Cost"
+                    <line x1="0" x2="760" y1="20" y2="20"></line>
+                    <line x1="0" x2="760" y1="70" y2="70"></line>
+                    <line x1="0" x2="760" y1="120" y2="120"></line>
+                    <line x1="0" x2="760" y1="170" y2="170"></line>
+                    <line
+                      stroke-dasharray="none"
+                      stroke-width="1.5"
+                      x1="0"
+                      x2="760"
+                      y1="210"
+                      y2="210"
+                    ></line>
+                  </g>
+                  {/* <!-- Y-Axis Labels --> */}
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="10"
+                    text-anchor="end"
+                    x="755"
+                    y="24"
+                  >
+                    1600ms
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="10"
+                    text-anchor="end"
+                    x="755"
+                    y="74"
+                  >
+                    1200ms
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="10"
+                    text-anchor="end"
+                    x="755"
+                    y="124"
+                  >
+                    800ms
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="10"
+                    text-anchor="end"
+                    x="755"
+                    y="174"
+                  >
+                    400ms
+                  </text>
+                  {/* <!-- Gradient Area under P95 --> */}
+                  <path
+                    className="transition-opacity duration-300"
+                    d="M 10 95 Q 130 80, 250 100 T 500 70 T 750 85 L 750 210 L 10 210 Z"
+                    fill="url(#p95Glow)"
+                    id="areaP95"
+                  ></path>
+                  {/* <!-- P50 Curve (Median - Cyan/Teal #06b6d4) --> */}
+                  <path
+                    className="chart-curve-animate-delay-2 transition-all duration-300"
+                    d="M 10 135 C 130 145, 230 125, 380 130 C 510 135, 620 120, 750 130"
+                    fill="none"
+                    id="curveP50"
+                    stroke="#06b6d4"
+                    stroke-linecap="round"
+                    stroke-width="2.5"
+                  ></path>
+                  {/* <!-- P95 Curve (Indigo #6366f1) --> */}
+                  <path
+                    className="chart-curve-animate-delay-1 transition-all duration-300"
+                    d="M 10 95 C 120 70, 240 105, 380 85 C 500 68, 620 95, 750 85"
+                    fill="none"
+                    id="curveP95"
+                    stroke="#6366f1"
+                    stroke-linecap="round"
+                    stroke-width="3"
+                  ></path>
+                  {/* <!-- P99 Curve (Amber/Orange #f59e0b) --> */}
+                  <path
+                    className="chart-curve-animate transition-all duration-300"
+                    d="M 10 55 C 120 40, 260 65, 380 48 C 510 32, 630 60, 750 50"
+                    fill="none"
+                    id="curveP99"
+                    stroke="#f59e0b"
+                    stroke-dasharray="3 3"
+                    stroke-linecap="round"
+                    stroke-width="2"
+                  ></path>
+                  {/* <!-- Interactive Target Crosshair & Points --> */}
+                  <g
+                    className="transition-transform duration-75"
+                    id="interactiveMarker"
+                    transform="translate(380, 0)"
+                  >
+                    <line
+                      opacity="0.75"
                       stroke="#6366f1"
-                      strokeWidth={2}
-                      fill="url(#costGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-base">Token usage over time</CardTitle>
-              <CardDescription>
-                Compare input and output token consumption.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-70">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={costTrend}
-                    margin={{ top: 8, right: 8, bottom: 0, left: -10 }}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="var(--border)"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
-                    />
-                    <Tooltip contentStyle={tooltipStyle} />
-                    <Legend />
-                    <Bar
-                      dataKey="input"
-                      name="Input tokens"
+                      stroke-dasharray="3 3"
+                      stroke-width="1.5"
+                      x1="0"
+                      x2="0"
+                      y1="10"
+                      y2="210"
+                    ></line>
+                    {/* <!-- P99 dot --> */}
+                    <circle
+                      className="cursor-pointer"
+                      cx="0"
+                      cy="48"
+                      fill="#f59e0b"
+                      filter="url(#glowAmber)"
+                      id="markerP99"
+                      r="4.5"
+                      stroke="#080b12"
+                      stroke-width="2"
+                    ></circle>
+                    {/* <!-- P95 dot with animated ring --> */}
+                    <circle
+                      className="animate-ping"
+                      cx="0"
+                      cy="85"
                       fill="#6366f1"
-                      radius={[3, 3, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="output"
-                      name="Output tokens"
-                      fill="#10b981"
-                      radius={[3, 3, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                      id="pingRingP95"
+                      opacity="0.4"
+                      r="8"
+                    ></circle>
+                    <circle
+                      className="cursor-pointer"
+                      cx="0"
+                      cy="85"
+                      fill="#818cf8"
+                      filter="url(#glowIndigo)"
+                      id="markerP95"
+                      r="5.5"
+                      stroke="#080b12"
+                      stroke-width="2"
+                    ></circle>
+                    {/* <!-- P50 dot --> */}
+                    <circle
+                      className="cursor-pointer"
+                      cx="0"
+                      cy="130"
+                      fill="#06b6d4"
+                      id="markerP50"
+                      r="4.5"
+                      stroke="#080b12"
+                      stroke-width="2"
+                    ></circle>
+                  </g>
+                  {/* <!-- Day Ticks along X-axis --> */}
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="11"
+                    x="10"
+                    y="218"
+                  >
+                    Oct 21
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="11"
+                    x="135"
+                    y="218"
+                  >
+                    Oct 22
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="11"
+                    x="255"
+                    y="218"
+                  >
+                    Oct 23
+                  </text>
+                  <text
+                    className="font-caption font-mono font-bold"
+                    fill="#818cf8"
+                    font-size="11"
+                    id="tickOct24"
+                    x="380"
+                    y="218"
+                  >
+                    Oct 24
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="11"
+                    x="500"
+                    y="218"
+                  >
+                    Oct 25
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="11"
+                    x="625"
+                    y="218"
+                  >
+                    Oct 26
+                  </text>
+                  <text
+                    className="font-caption font-mono"
+                    fill="#64748b"
+                    font-size="11"
+                    text-anchor="end"
+                    x="740"
+                    y="218"
+                  >
+                    Oct 27
+                  </text>
+                </svg>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="border-border/70 shadow-none">
-          <CardHeader>
-            <CardTitle className="text-base">Spending by model</CardTitle>
-            <CardDescription>
-              Models ranked by their contribution to total cost.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-162.5 text-sm">
+              {/* <!-- Chart Legend Pills --> */}
+              <div className="flex items-center justify-between flex-wrap gap-space-sm pt-space-xs border-t-0">
+                <div className="flex items-center gap-space-md">
+                  {/* <!-- P50 Legend --> */}
+                  <button
+                    className="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-[#131828] border border-[#23293d] hover:border-cyan-500/50 hover:bg-[#192238] active:scale-95 text-[#f8fafc] font-label-sm text-label-sm transition-all shadow-sm"
+                    id="toggleP50"
+                    title="Click to isolate P50 curve"
+                    type="button"
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#06b6d4] shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+                    <span className="font-medium text-slate-200">
+                      P50 (Median)
+                    </span>
+                    <span className="font-caption text-caption text-slate-400 font-mono">
+                      ~812ms
+                    </span>
+                  </button>
+                  {/* <!-- P95 Legend --> */}
+                  <button
+                    className="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-indigo-950/70 border border-indigo-500/50 hover:border-indigo-400 hover:bg-indigo-900/60 active:scale-95 text-indigo-200 font-label-sm text-label-sm shadow-[0_0_12px_rgba(99,102,241,0.25)] transition-all"
+                    id="toggleP95"
+                    title="Click to isolate P95 curve"
+                    type="button"
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#6366f1] shadow-[0_0_8px_rgba(99,102,241,0.9)]"></span>
+                    <span className="font-semibold text-white">
+                      P95 (Slowest 5%)
+                    </span>
+                    <span className="font-caption text-caption text-indigo-300 font-mono">
+                      1,442ms
+                    </span>
+                  </button>
+                  {/* <!-- P99 Legend --> */}
+                  <button
+                    className="flex items-center gap-space-xs px-2.5 py-1 rounded-full bg-[#131828] border border-[#23293d] hover:border-amber-500/50 hover:bg-[#192238] active:scale-95 text-[#f8fafc] font-label-sm text-label-sm transition-all shadow-sm"
+                    id="toggleP99"
+                    title="Click to isolate P99 curve"
+                    type="button"
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
+                    <span className="font-medium text-slate-200">
+                      P99 (Slowest 1%)
+                    </span>
+                    <span className="font-caption text-caption text-slate-400 font-mono">
+                      ~1,590ms
+                    </span>
+                  </button>
+                </div>
+                <div className="flex items-center gap-space-xs text-slate-400 font-caption text-caption">
+                  <span className="material-symbols-outlined text-sm text-indigo-400">
+                    info
+                  </span>
+                  <span>
+                    Hover over chart to inspect granular data • Sampled 200 runs
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* <!-- Latency by Model Section (Benchmarking Table) --> */}
+          <div className="flex flex-col gap-space-md mb-space-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-space-xs">
+              <div>
+                <h2 className="font-title-md text-title-md text-[#f8fafc] font-semibold">
+                  Latency by model
+                </h2>
+                <p className="font-label-sm text-label-sm text-slate-400">
+                  Compare performance across providers and models.
+                </p>
+              </div>
+              <div className="flex items-center gap-space-xs">
+                <span className="font-caption text-caption text-slate-400">
+                  Sort by:
+                </span>
+                <div
+                  className="flex items-center bg-[#131828] p-0.5 rounded-lg border border-[#23293d]"
+                  id="sortControls"
+                >
+                  <button
+                    className="sort-btn active px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-indigo-600 transition-all shadow-sm"
+                    data-sort="requests"
+                    type="button"
+                  >
+                    Requests (Desc)
+                  </button>
+                  <button
+                    className="sort-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-white transition-all"
+                    data-sort="latency"
+                    type="button"
+                  >
+                    Avg Latency
+                  </button>
+                  <button
+                    className="sort-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-400 hover:text-white transition-all"
+                    data-sort="p95"
+                    type="button"
+                  >
+                    P95
+                  </button>
+                </div>
+              </div>
+            </div>
+            {/* <!-- Clean Data Table Container --> */}
+            <div className="overflow-x-auto rounded-xl bg-[#0f1424] border border-[#1e263d] shadow-xl">
+              <table
+                className="w-full text-left border-collapse"
+                id="modelBenchmarkTable"
+              >
                 <thead>
-                  <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Model</th>
-                    <th className="pb-3 font-medium">Provider</th>
-                    <th className="pb-3 text-right font-medium">Tokens</th>
-                    <th className="pb-3 text-right font-medium">Total cost</th>
-                    <th className="pb-3 text-right font-medium">Share</th>
+                  <tr className="bg-[#0c101c] border-b border-[#1e263d] text-slate-400 font-caption text-caption uppercase tracking-wider">
+                    <th className="py-3.5 px-space-md font-semibold">Model</th>
+                    <th className="py-3.5 px-space-md font-semibold">
+                      Provider
+                    </th>
+                    <th className="py-3.5 px-space-md font-semibold text-right">
+                      Requests
+                    </th>
+                    <th className="py-3.5 px-space-md font-semibold text-right">
+                      Avg. Latency
+                    </th>
+                    <th className="py-3.5 px-space-md font-semibold text-right">
+                      P95
+                    </th>
+                    <th className="py-3.5 px-space-md font-semibold text-center">
+                      Status
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {costBreakdown.map((item) => (
-                    <tr key={item.model} className="border-b last:border-0">
-                      <td className="py-4 font-medium">{item.model}</td>
-                      <td className="py-4 text-muted-foreground">
-                        {item.provider}
-                      </td>
-                      <td className="py-4 text-right tabular-nums">
-                        {item.tokens.toLocaleString()}
-                      </td>
-                      <td className="py-4 text-right font-medium tabular-nums">
-                        ${item.cost.toFixed(6)}
-                      </td>
-                      <td className="py-4 text-right tabular-nums">
-                        {item.share.toFixed(2)}%
-                      </td>
-                    </tr>
-                  ))}
+                <tbody className="divide-y divide-[#1e263d]" id="tableBody">
+                  {/* <!-- Row 1: GPT-5 --> */}
+                  <tr
+                    className="model-row hover:bg-[#161f36] transition-all duration-200 group cursor-pointer hover:shadow-inner"
+                    data-latency="950"
+                    data-p95="1420"
+                    data-requests="120"
+                  >
+                    <td className="py-3.5 px-space-md">
+                      <div className="flex items-center gap-space-sm">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400 ring-2 ring-emerald-500/20"></span>
+                        </span>
+                        <span className="font-label-md text-label-md font-semibold text-[#f8fafc] group-hover:text-indigo-400 transition-colors">
+                          GPT-5
+                        </span>
+                        <span className="font-caption text-caption px-1.5 py-0.5 rounded bg-[#1c2438] border border-[#273352] text-slate-300">
+                          Default
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-space-md">
+                      <span className="font-body-md text-body-md text-slate-300 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-base text-slate-400 group-hover:text-indigo-400 transition-colors">
+                          smart_toy
+                        </span>
+                        OpenAI
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc] font-medium">
+                      120
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc]">
+                      950 ms
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc] font-semibold">
+                      1,420 ms
+                    </td>
+                    <td className="py-3.5 px-space-md text-center">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 font-caption text-caption font-medium shadow-[0_0_8px_rgba(16,185,129,0.15)] group-hover:border-emerald-400/50 transition-colors">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Optimal
+                      </span>
+                    </td>
+                  </tr>
+                  {/* <!-- Row 2: Claude Sonnet --> */}
+                  <tr
+                    className="model-row hover:bg-[#161f36] transition-all duration-200 group cursor-pointer hover:shadow-inner"
+                    data-latency="878"
+                    data-p95="1300"
+                    data-requests="50"
+                  >
+                    <td className="py-3.5 px-space-md">
+                      <div className="flex items-center gap-space-sm">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400 ring-2 ring-amber-500/20"></span>
+                        </span>
+                        <span className="font-label-md text-label-md font-semibold text-[#f8fafc] group-hover:text-indigo-400 transition-colors">
+                          Claude Sonnet
+                        </span>
+                        <span className="font-caption text-caption px-1.5 py-0.5 rounded bg-[#1c2438] border border-[#273352] text-slate-300">
+                          v3.5
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-space-md">
+                      <span className="font-body-md text-body-md text-slate-300 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-base text-slate-400 group-hover:text-indigo-400 transition-colors">
+                          psychology
+                        </span>
+                        Anthropic
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc] font-medium">
+                      50
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc]">
+                      878 ms
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc] font-semibold">
+                      1,300 ms
+                    </td>
+                    <td className="py-3.5 px-space-md text-center">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950/50 border border-amber-500/30 text-amber-300 font-caption text-caption font-medium shadow-[0_0_8px_rgba(245,158,11,0.15)] group-hover:border-amber-400/50 transition-colors">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        Elevated
+                      </span>
+                    </td>
+                  </tr>
+                  {/* <!-- Row 3: Gemini --> */}
+                  <tr
+                    className="model-row hover:bg-[#161f36] transition-all duration-200 group cursor-pointer hover:shadow-inner"
+                    data-latency="820"
+                    data-p95="1180"
+                    data-requests="30"
+                  >
+                    <td className="py-3.5 px-space-md">
+                      <div className="flex items-center gap-space-sm">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-60"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400 ring-2 ring-cyan-500/20"></span>
+                        </span>
+                        <span className="font-label-md text-label-md font-semibold text-[#f8fafc] group-hover:text-indigo-400 transition-colors">
+                          Gemini
+                        </span>
+                        <span className="font-caption text-caption px-1.5 py-0.5 rounded bg-[#1c2438] border border-[#273352] text-slate-300">
+                          1.5 Flash
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-space-md">
+                      <span className="font-body-md text-body-md text-slate-300 flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-base text-slate-400 group-hover:text-indigo-400 transition-colors">
+                          auto_awesome
+                        </span>
+                        Google
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc] font-medium">
+                      30
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc]">
+                      820 ms
+                    </td>
+                    <td className="py-3.5 px-space-md text-right font-mono font-label-md text-label-md text-[#f8fafc] font-semibold">
+                      1,180 ms
+                    </td>
+                    <td className="py-3.5 px-space-md text-center">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-950/50 border border-cyan-500/30 text-cyan-300 font-caption text-caption font-medium shadow-[0_0_8px_rgba(6,182,212,0.15)] group-hover:border-cyan-400/50 transition-colors">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                        Fastest
+                      </span>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
-      </section> */}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between border-t pt-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <Layers3 className="h-3.5 w-3.5" />
-          Analytics for the selected project 
-        </span>
-        <span>Times shown in UTC</span>
-      </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

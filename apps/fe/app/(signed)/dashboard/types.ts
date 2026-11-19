@@ -33,6 +33,84 @@ export type LatencyMetrics = {
   totalTraces: number;
 };
 
+export type PerformanceMetrics = {
+  p95LatencyMs: number;
+  errorRate: number;
+  totalCost: number;
+  totalTokens: number;
+};
+
+export type LatencyTrend = {
+  range: string;
+  interval: string;
+  data: {
+    timestamp: string;
+    traceCount: number;
+    averageLatencyMs: number;
+    p50LatencyMs: number;
+    p95LatencyMs: number;
+    p99LatencyMs: number;
+  }[];
+};
+
+export type CostTrend = {
+  range: string;
+  interval: string;
+  data: {
+    timestamp: string;
+    traceCount: number;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    totalCost: number;
+  }[];
+};
+
+export type CostBreakdown = {
+  range: string;
+  totalCost: number;
+  totalTokens: number;
+  data: {
+    provider: string;
+    model: string;
+    traceCount: number;
+    inputTokens: number;
+    outputTokens: number;
+    totalTokens: number;
+    inputCost: number;
+    outputCost: number;
+    totalCost: number;
+    costPercentage: number;
+  }[];
+};
+
+export type LatencyBreakdown = {
+  range: string;
+  data: {
+    provider: string;
+    model: string;
+    traceCount: number;
+    averageLatencyMs: number;
+    p50LatencyMs: number;
+    p95LatencyMs: number;
+    p99LatencyMs: number;
+  }[];
+};
+
+export type ErrorBreakdown = {
+  range: string;
+  totalTraces: number;
+  errorTraces: number;
+  errorRate: number;
+  data: {
+    provider: string;
+    model: string;
+    errorType: string;
+    errorCount: number;
+    percentageOfErrors: number;
+  }[];
+};
+
 export type Project = {
   id: string;
   organizationId: string;
@@ -51,8 +129,8 @@ export type AnalyticsVolume = {
   }[];
 };
 
-export type TraceVolumeRange = "24h" | "7d" | "30d";
-export const validRanges: TraceVolumeRange[] = ["24h", "7d", "30d"];
+export type Range = "24h" | "7d" | "30d";
+export const validRanges: Range[] = ["24h", "7d", "30d"];
 
 export type Trace = {
   traceId: string;

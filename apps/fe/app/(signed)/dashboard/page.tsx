@@ -3,7 +3,7 @@ import {
   LatencyMetrics,
   OverviewMetrics,
   ReliabilityMetrics,
-  TraceVolumeRange,
+  Range,
   validRanges,
 } from "./types";
 import VolumeRangeSelector from "@/components/dashboard/VolumeRangeSelector";
@@ -29,8 +29,8 @@ const DashboardPage = async ({
     return <p>No projects yet. Create your first project.</p>;
   }
 
-  const range = validRanges.includes(params.range as TraceVolumeRange)
-    ? (params.range as TraceVolumeRange)
+  const range = validRanges.includes(params.range as Range)
+    ? (params.range as Range)
     : "24h";
 
   const [overview, analyticsVolume] = await Promise.all([

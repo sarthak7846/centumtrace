@@ -3,7 +3,7 @@
 import { useId, useState } from "react";
 import {
   AnalyticsVolume,
-  TraceVolumeRange,
+  Range,
 } from "@/app/(signed)/dashboard/types";
 import {
   ResponsiveContainer,
@@ -15,7 +15,6 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
-import { getAnalyticsVolume } from "@/services/api/analytics";
 
 type TraceVolumeChartProps = {
   initialAnalyticsVolume: AnalyticsVolume;
@@ -26,7 +25,7 @@ export default function TraceVolumeChart({
   initialAnalyticsVolume,
   selectProjectId,
 }: TraceVolumeChartProps) {
-  const [selectedRange, setSelectedRange] = useState<TraceVolumeRange>("24h");
+  const [selectedRange, setSelectedRange] = useState<Range>("24h");
   const [analyticsVolume, setAnalyticsVolume] = useState<AnalyticsVolume>(
     initialAnalyticsVolume,
   );
@@ -71,7 +70,7 @@ export default function TraceVolumeChart({
     }));
   };
 
-  const handleRangeChange = async (range: TraceVolumeRange) => {
+  const handleRangeChange = async (range: Range) => {
     if (range === selectedRange) return;
 
     setIsLoading(true);
