@@ -81,7 +81,7 @@ export default function LatencyTrendChart({
   };
 
   return (
-    <div className="anim-entry-5 interactive-card rounded-xl bg-surface-container-low p-space-lg shadow-xl relative">
+    <div className="anim-entry-5 interactive-card mb-space-lg rounded-xl bg-surface-container-low p-space-lg shadow-xl relative">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-sm mb-space-lg">
         <div>

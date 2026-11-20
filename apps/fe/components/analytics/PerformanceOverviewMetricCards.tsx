@@ -29,7 +29,7 @@ const PerformanceOverviewMetricCards = ({
             data-target="1442"
             data-type="int"
           >
-            {p95LatencyMs}
+            {p95LatencyMs.toFixed(2)}
           </span>
           <span className="font-label-md text-label-md text-slate-400 font-medium">
             ms
