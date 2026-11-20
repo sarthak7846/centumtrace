@@ -159,35 +159,73 @@
 
 /* Ambient Motion & Background Glows */
 @keyframes floatOrb1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(40px, 30px) scale(1.12); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(40px, 30px) scale(1.12);
+  }
 }
 @keyframes floatOrb2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-35px, -45px) scale(1.18); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-35px, -45px) scale(1.18);
+  }
 }
 @keyframes floatOrb3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(25px, -30px) scale(1.08); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(25px, -30px) scale(1.08);
+  }
 }
 @keyframes subtleDrift {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 @keyframes shimmerPass {
-  0% { transform: translateX(-150%) skewX(-20deg); }
-  100% { transform: translateX(250%) skewX(-20deg); }
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
 }
 @keyframes badgePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(76, 215, 246, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(76, 215, 246, 0); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 215, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(76, 215, 246, 0);
+  }
 }
 
-.animate-orb-1 { animation: floatOrb1 16s ease-in-out infinite; }
-.animate-orb-2 { animation: floatOrb2 20s ease-in-out infinite; }
-.animate-orb-3 { animation: floatOrb3 18s ease-in-out infinite; }
-.animate-drift { animation: subtleDrift 6s ease-in-out infinite; }
+.animate-orb-1 {
+  animation: floatOrb1 16s ease-in-out infinite;
+}
+.animate-orb-2 {
+  animation: floatOrb2 20s ease-in-out infinite;
+}
+.animate-orb-3 {
+  animation: floatOrb3 18s ease-in-out infinite;
+}
+.animate-drift {
+  animation: subtleDrift 6s ease-in-out infinite;
+}
 
 /* Stagger entrance utility */
 .entrance-fade {
@@ -204,14 +242,30 @@
 }
 
 /* Stagger delays */
-.delay-1 { animation-delay: 0.05s; }
-.delay-2 { animation-delay: 0.12s; }
-.delay-3 { animation-delay: 0.2s; }
-.delay-4 { animation-delay: 0.28s; }
-.delay-5 { animation-delay: 0.36s; }
-.delay-6 { animation-delay: 0.44s; }
-.delay-7 { animation-delay: 0.52s; }
-.delay-8 { animation-delay: 0.6s; }
+.delay-1 {
+  animation-delay: 0.05s;
+}
+.delay-2 {
+  animation-delay: 0.12s;
+}
+.delay-3 {
+  animation-delay: 0.2s;
+}
+.delay-4 {
+  animation-delay: 0.28s;
+}
+.delay-5 {
+  animation-delay: 0.36s;
+}
+.delay-6 {
+  animation-delay: 0.44s;
+}
+.delay-7 {
+  animation-delay: 0.52s;
+}
+.delay-8 {
+  animation-delay: 0.6s;
+}
 
 /* Interactive ripple on CTA */
 .btn-ripple-container {
@@ -235,9 +289,15 @@
 
 /* Checkbox pop effect */
 @keyframes checkBounce {
-  0% { transform: scale(0.85); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .peer:checked ~ .checkbox-box {
   animation: checkBounce 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -245,7 +305,10 @@
 
 /* Grid background pattern */
 .dot-grid {
-  background-image: radial-gradient(rgba(192, 193, 255, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(
+    rgba(192, 193, 255, 0.08) 1px,
+    transparent 1px
+  );
   background-size: 28px 28px;
 }
 
@@ -284,18 +347,32 @@
 }
 
 @keyframes floatAmbient1 {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(45px, 25px) scale(1.1); }
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(45px, 25px) scale(1.1);
+  }
 }
 
 @keyframes floatAmbient2 {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  50% { transform: translate(-35px, -30px) scale(1.15); }
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-35px, -30px) scale(1.15);
+  }
 }
 
 @keyframes shimmerGlow {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes drawStroke {
@@ -308,40 +385,105 @@
 }
 
 @keyframes pingPulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  70% { transform: scale(2.4); opacity: 0; }
-  100% { transform: scale(2.6); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
 }
 
 @keyframes radarWave {
-  0% { transform: scale(0.9); opacity: 0.8; }
-  100% { transform: scale(2.2); opacity: 0; }
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
 }
 
 @keyframes syncSweep {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Staggered entrance animation delays */
-.anim-sidebar { animation: slideRightIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-.anim-header { animation: slideDownIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.anim-sidebar {
+  animation: slideRightIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.anim-header {
+  animation: slideDownIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
 
-.anim-entry-1 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both; }
-.anim-entry-2 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both; }
-.anim-entry-3 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both; }
-.anim-entry-4 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both; }
-.anim-entry-5 { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+.anim-entry-1 {
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both;
+}
+.anim-entry-2 {
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both;
+}
+.anim-entry-3 {
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both;
+}
+.anim-entry-4 {
+  animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
+}
+.anim-entry-5 {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+}
+
+.anim-card-1 {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+.anim-card-2 {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+}
+.anim-card-3 {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+}
+.anim-filters {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+}
+.anim-table {
+  animation: fadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.34s both;
+}
+
+/* Row staggers */
+.trace-row:nth-child(1) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
+.trace-row:nth-child(2) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.40s both; }
+.trace-row:nth-child(3) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.44s both; }
+.trace-row:nth-child(4) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.48s both; }
+.trace-row:nth-child(5) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.52s both; }
+.trace-row:nth-child(6) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.56s both; }
+.trace-row:nth-child(7) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.60s both; }
+.trace-row:nth-child(8) { animation: rowEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.64s both; }
 
 /* Interactive glowing card states */
 .interactive-card {
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.28s ease, background-color 0.2s ease;
+  transition:
+    transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.28s ease,
+    background-color 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.04);
 }
 .interactive-card:hover {
   transform: translateY(-3px);
   border-color: rgba(192, 193, 255, 0.22);
-  box-shadow: 0 12px 30px -8px rgba(15, 19, 28, 0.85), 0 0 20px -3px rgba(99, 102, 241, 0.16);
+  box-shadow:
+    0 12px 30px -8px rgba(15, 19, 28, 0.85),
+    0 0 20px -3px rgba(99, 102, 241, 0.16);
 }
 
 /* Ambient cosmic glow bubbles */
@@ -372,7 +514,9 @@
 
 /* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *,
+  ::before,
+  ::after {
     animation-delay: -1ms !important;
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
