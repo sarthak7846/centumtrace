@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { startNavigationProgress } from "@/lib/navigation-progress";
 
 type Project = {
   id: string;
@@ -50,7 +51,7 @@ const ProjectSelector = ({
 
     params.set("projectId", projectId);
     setIsOpen(false);
-    window.dispatchEvent(new Event("navigation-start"));
+    startNavigationProgress();
     router.replace(`${pathname}?${params.toString()}`);
   };
 

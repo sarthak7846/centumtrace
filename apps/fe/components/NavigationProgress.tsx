@@ -6,12 +6,15 @@ import { usePathname, useSearchParams } from "next/navigation";
 export default function NavigationProgress() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const search = searchParams.toString();
 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setIsLoading(false);
-  }, [pathname, searchParams]);
+    const timeout = setTimeout(() => setIsLoading(false), 0);
+
+    return () => clearTimeout(timeout);
+  }, [pathname, search]);
 
   useEffect(() => {
     if (!isLoading) return;

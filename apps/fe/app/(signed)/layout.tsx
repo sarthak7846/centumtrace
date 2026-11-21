@@ -1,4 +1,3 @@
-import NavigationProgress from "@/components/NavigationProgress";
 import Sidebar from "@/components/Sidebar";
 import SignedHeader from "@/components/SignedHeader";
 import { getSignedInProjects } from "@/services/api/projects";
@@ -8,7 +7,6 @@ const SignedLayout = async ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="bg-background min-h-screen">
-      <NavigationProgress/>
       <Sidebar projects={projects} />
       <div className="pl-56">
         <SignedHeader />

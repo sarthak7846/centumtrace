@@ -2,6 +2,7 @@
 
 import { TraceVolumeRange } from "@/app/(signed)/dashboard/types";
 import { useRouter, useSearchParams } from "next/navigation";
+import { startNavigationProgress } from "@/lib/navigation-progress";
 
 const ranges: { label: string; value: TraceVolumeRange }[] = [
   { label: "24 hours", value: "24h" },
@@ -21,6 +22,7 @@ export default function VolumeRangeSelector({
     const params = new URLSearchParams(searchParams.toString());
     params.set("range", range);
 
+    startNavigationProgress();
     router.replace(`/dashboard?${params.toString()}`);
   }
 

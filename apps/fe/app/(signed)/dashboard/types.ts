@@ -131,6 +131,20 @@ export type AnalyticsVolume = {
 
 export type Range = "24h" | "7d" | "30d";
 export const validRanges: Range[] = ["24h", "7d", "30d"];
+export const traceFilterQueryFields = [
+  "status",
+  "provider",
+  "model",
+  "traceId",
+  "apiKeyId",
+  "range",
+  "minLatency",
+  "maxLatency",
+  "minCost",
+  "maxCost",
+  "minTokens",
+  "maxTokens",
+];
 
 export type Trace = {
   traceId: string;

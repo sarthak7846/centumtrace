@@ -1,6 +1,40 @@
 import { TraceResponse } from "@/app/(signed)/dashboard/types";
+import Link from "next/link";
 
-const TracesList = ({ result }: { result: TraceResponse }) => {
+function formatTimestamp(timestamp: string) {
+  return new Date(timestamp).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatLatency(latencyMs: number | null) {
+  if (latencyMs == null) return "—";
+
+  if (latencyMs >= 1000) {
+    return `${(latencyMs / 1000).toFixed(2)} s`;
+  }
+
+  return `${latencyMs} ms`;
+}
+
+const TracesList = ({
+  result,
+  pageUrl,
+  selectedProjectId,
+}: {
+  result: TraceResponse;
+  pageUrl: (nextPage: number, selectedProjectId: string) => string;
+  selectedProjectId: string;
+}) => {
+  const isPreviousDisabled = result.page <= 1;
+  const isNextDisabled = result.page >= Math.max(1, result.totalPages);
+  const rangeStart =
+    result.totalCount === 0 ? 0 : (result.page - 1) * result.limit + 1;
+  const rangeEnd = Math.min(result.page * result.limit, result.totalCount);
+
   return (
     <div className="anim-table rounded-xl bg-surface-container-lowest border border-[#1e2436] shadow-sm flex flex-col overflow-hidden">
       {/* <!-- Card Subheader --> */}
@@ -16,7 +50,7 @@ const TracesList = ({ result }: { result: TraceResponse }) => {
             {result.totalCount} matching records
           </span>
         </div>
-        <div className="flex items-center gap-space-xs">
+        {/* <div className="flex items-center gap-space-xs">
           <span className="font-label-sm text-label-sm text-on-surface-variant">
             Sort by:
           </span>
@@ -29,7 +63,7 @@ const TracesList = ({ result }: { result: TraceResponse }) => {
           <span className="px-space-sm py-1 rounded-md bg-surface-container text-on-surface-variant font-caption text-caption border border-[#1e2436]">
             Page 1
           </span>
-        </div>
+        </div> */}
       </div>
       {/* <!-- Responsive Table Container --> */}
       <div className="overflow-x-auto w-full">
@@ -58,75 +92,88 @@ const TracesList = ({ result }: { result: TraceResponse }) => {
             id="traces-table-body"
           >
             {/* <!-- Row 1: Error RateLimit --> */}
-            <tr
-              className="trace-row hover:bg-[#111728] transition-all duration-200 cursor-pointer group"
-              data-model="gpt-4"
-              data-provider="openai"
-              data-status="ERROR"
-              // onClick="inspectRow('tr_9a8f4c2e1b')"
-            >
-              <td className="py-space-md px-space-lg">
-                <div className="flex items-center gap-space-sm">
-                  <div className="w-2 h-2 rounded-full bg-error ring-2 ring-error/20 group-hover:scale-125 transition-transform"></div>
-                  <div className="flex flex-col">
-                    <div
-                      className="copy-pill inline-flex items-center gap-1.5"
-                      // onClick="event.stopPropagation(); copyTraceId('tr_9a8f4c2e1b', this)"
-                    >
-                      <span className="font-mono font-medium text-primary group-hover:text-indigo-300 transition-colors">
-                        tr_9a8f4c2e1b
-                      </span>
-                      <span
-                        className="copy-icon material-symbols-outlined text-xs text-slate-400 opacity-0 group-hover:opacity-60 hover:opacity-100! transition-all hover:text-white"
-                        title="Copy Trace ID"
+            {result.data.map((trace) => (
+              <tr
+                className="trace-row hover:bg-[#111728] transition-all duration-200 cursor-pointer group"
+                data-model="gpt-4"
+                data-provider="openai"
+                data-status="ERROR"
+                key={trace.traceId}
+                // onClick="inspectRow('tr_9a8f4c2e1b')"
+              >
+                <td className="py-space-md px-space-lg">
+                  <div className="flex items-center gap-space-sm">
+                    <div className="w-2 h-2 rounded-full bg-error ring-2 ring-error/20 group-hover:scale-125 transition-transform"></div>
+                    <div className="flex flex-col">
+                      <div
+                        className="copy-pill inline-flex items-center gap-1.5"
+                        // onClick="event.stopPropagation(); copyTraceId('tr_9a8f4c2e1b', this)"
                       >
-                        content_copy
-                      </span>
-                      {/* <span className="copy-tooltip absolute -top-6 left-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded shadow border border-slate-700">
+                        <span className="font-mono font-medium text-primary group-hover:text-indigo-300 transition-colors">
+                          {trace.traceId}
+                        </span>
+                        {/* <span
+                          className="copy-icon material-symbols-outlined text-xs text-slate-400 opacity-0 group-hover:opacity-60 hover:opacity-100! transition-all hover:text-white"
+                          title="Copy Trace ID"
+                        >
+                          content_copy
+                        </span>
+                        <span className="copy-tooltip absolute top-0 left-0 bg-slate-800 text-white text-[10px] px-1.5 py-0.5 rounded shadow border border-slate-700">
                             Copied!
                           </span> */}
+                      </div>
+                      <span className="font-caption text-caption text-on-surface-variant">
+                        {trace.provider} · {trace.model}
+                      </span>
                     </div>
-                    <span className="font-caption text-caption text-on-surface-variant">
-                      openai · gpt-4
-                    </span>
                   </div>
-                </div>
-              </td>
-              <td className="py-space-md px-space-md">
-                <div className="inline-flex flex-col">
-                  <span className="badge-error-glow inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm bg-red-950/70 border border-error/40 text-red-300 font-semibold shadow-xs">
-                    <span className="w-1.5 h-1.5 rounded-full bg-error"></span>{" "}
-                    ERROR
-                  </span>
-                  <span className="font-caption text-caption text-error mt-0.5">
-                    RateLimitError (429)
-                  </span>
-                </div>
-              </td>
-              <td className="py-space-md px-space-md font-mono text-on-surface font-medium group-hover:text-white transition-colors">
-                927 ms
-              </td>
-              <td className="py-space-md px-space-md font-mono text-on-surface-variant">
-                8,898
-              </td>
-              <td className="py-space-md px-space-md font-mono font-medium text-on-surface group-hover:text-white transition-colors">
-                $0.125711
-              </td>
-              <td className="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
-                Oct 24, 05:28 AM
-              </td>
-              <td className="py-space-md px-space-lg text-right">
-                <button
-                  className="p-1.5 rounded-lg hover:bg-primary/20 text-on-surface-variant hover:text-indigo-300 hover:border-primary/40 border border-transparent transition-all duration-200 group/btn"
-                  // onClick="event.stopPropagation(); inspectRow('tr_9a8f4c2e1b')"
-                  title="Inspect Trace JSON"
-                >
-                  <span className="material-symbols-outlined text-lg group-hover/btn:scale-125 transition-transform duration-200">
-                    code
-                  </span>
-                </button>
-              </td>
-            </tr>
+                </td>
+                <td className="py-space-md px-space-md">
+                  <div className="inline-flex flex-col">
+                    {trace.status === "ERROR" ? (
+                      <>
+                        <span className="badge-error-glow inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm bg-red-950/70 border border-error/40 text-red-300 font-semibold shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-error"></span>{" "}
+                          ERROR
+                        </span>
+                        <span className="font-caption text-caption text-error mt-0.5">
+                          {trace.errorType}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="badge-success-glow inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-label-sm font-label-sm bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 font-semibold shadow-xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>{" "}
+                        SUCCESS
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-space-md px-space-md font-mono text-on-surface font-medium group-hover:text-white transition-colors">
+                  {formatLatency(trace.latencyMs)}
+                </td>
+                <td className="py-space-md px-space-md font-mono text-on-surface-variant">
+                  {trace.totalTokens?.toLocaleString() ?? "—"}
+                </td>
+                <td className="py-space-md px-space-md font-mono font-medium text-on-surface group-hover:text-white transition-colors">
+                  {trace.totalCost ? `$${trace.totalCost}` : "—"}
+                </td>
+                <td className="py-space-md px-space-md font-caption text-caption text-on-surface-variant">
+                  {formatTimestamp(trace.createdAt)}
+                </td>
+                <td className="py-space-md px-space-lg text-right flex justify-end">
+                  <button
+                    className="p-1.5 rounded-lg hover:bg-primary/20 text-on-surface-variant hover:text-indigo-300 hover:border-primary/40 border border-transparent
+                    cursor-pointer transition-all duration-200 group/btn flex items-center justify-end"
+                    // onClick="event.stopPropagation(); inspectRow('tr_9a8f4c2e1b')"
+                    title="Inspect Trace JSON"
+                  >
+                    <span className="material-symbols-outlined text-lg  transition-transform duration-200">
+                      code
+                    </span>
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
@@ -135,27 +182,45 @@ const TracesList = ({ result }: { result: TraceResponse }) => {
         <div className="font-caption text-caption text-on-surface-variant">
           Showing{" "}
           <span className="font-semibold text-on-surface" id="pagination-range">
-            1 - 20
+            {rangeStart} - {rangeEnd}
           </span>{" "}
           of{" "}
           <span className="font-semibold text-on-surface" id="pagination-total">
-            353
+            {result.totalCount}
           </span>{" "}
-          traces · Page 1 of 18
+          traces · Page {result.page} of {Math.max(1, result.totalPages)}
         </div>
         <div className="flex items-center gap-space-xs">
-          <button className="group px-space-md py-1.5 rounded-md bg-surface-container border border-[#1e2436] text-on-surface-variant font-label-sm text-label-sm opacity-50 cursor-not-allowed flex items-center gap-1 transition-all">
+          <Link
+            href={pageUrl(result.page - 1, selectedProjectId)}
+            aria-disabled={isPreviousDisabled}
+            tabIndex={isPreviousDisabled ? -1 : undefined}
+            className={`group px-space-md py-1.5 rounded-md border font-label-sm text-label-sm flex items-center gap-1 transition-all ${
+              isPreviousDisabled
+                ? "bg-surface-container border-[#1e2436] text-on-surface-variant opacity-50 cursor-not-allowed pointer-events-none"
+                : "bg-surface-container hover:bg-surface-container-high border-[#1e2436] hover:border-slate-600 text-on-surface shadow-xs active:scale-95"
+            }`}
+          >
             <span className="material-symbols-outlined text-base group-hover:-translate-x-0.5 transition-transform">
               chevron_left
             </span>
             <span>Previous</span>
-          </button>
-          <button className="group px-space-md py-1.5 rounded-md bg-surface-container hover:bg-surface-container-high border border-[#1e2436] hover:border-slate-600 text-on-surface font-label-sm text-label-sm flex items-center gap-1 transition-all active:scale-95 shadow-xs">
+          </Link>
+          <Link
+            href={pageUrl(result.page + 1, selectedProjectId)}
+            aria-disabled={isNextDisabled}
+            tabIndex={isNextDisabled ? -1 : undefined}
+            className={`group px-space-md py-1.5 rounded-md border font-label-sm text-label-sm flex items-center gap-1 transition-all ${
+              isNextDisabled
+                ? "bg-surface-container border-[#1e2436] text-on-surface-variant opacity-50 cursor-not-allowed pointer-events-none"
+                : "bg-surface-container hover:bg-surface-container-high border-[#1e2436] hover:border-slate-600 text-on-surface shadow-xs active:scale-95"
+            }`}
+          >
             <span>Next</span>
             <span className="material-symbols-outlined text-base group-hover:translate-x-0.5 transition-transform">
               chevron_right
             </span>
-          </button>
+          </Link>
         </div>
       </div>
     </div>

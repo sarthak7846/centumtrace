@@ -1,25 +1,20 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-
-export const traceFilterQueryFields = [
-  "status",
-  "provider",
-  "model",
-  "traceId",
-  "apiKeyId",
-  "range",
-  "minLatency",
-  "maxLatency",
-  "minCost",
-  "maxCost",
-  "minTokens",
-  "maxTokens",
-];
+import { startNavigationProgress } from "@/lib/navigation-progress";
+import { useRef } from "react";
+import { traceFilterQueryFields } from "@/app/(signed)/dashboard/types";
 
 const TracesFilterCard = ({ projectId }: { projectId: string }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const handleReset = () => {
+    formRef.current?.reset();
+    startNavigationProgress();
+    router.push("/traces");
+  };
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,15 +33,19 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
       }
     }
 
-    // Preserve sorting when applying filters.
-    params.set("sortBy", searchParams.get("sortBy") ?? "createdAt");
-    params.set("sortOrder", searchParams.get("sortOrder") ?? "desc");
+    params.set("sortBy", String(formData.get("sortBy") ?? "createdAt"));
+    params.set("sortOrder", String(formData.get("sortOrder") ?? "desc"));
 
+    startNavigationProgress();
     router.push(`/traces?${params.toString()}`);
   }
 
   return (
-    <div className="anim-filters p-space-lg rounded-xl bg-surface-container-lowest border border-[#1e2436] shadow-sm mb-space-lg flex flex-col gap-space-md">
+    <form
+      onSubmit={handleSubmit}
+      ref={formRef}
+      className="anim-filters p-space-lg rounded-xl bg-surface-container-lowest border border-[#1e2436] shadow-sm mb-space-lg flex flex-col gap-space-md"
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm border-b border-[#1e2436]">
         <div className="flex flex-col">
           <div className="flex items-center gap-space-xs">
@@ -64,16 +63,17 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
         </div>
         <div className="flex items-center gap-space-sm self-end md:self-auto">
           <button
-            className="px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-transparent hover:border-slate-700 text-on-surface font-label-md text-label-md transition-all active:scale-95 duration-150"
+            className="px-space-md py-2 rounded-lg bg-surface-container cursor-pointer hover:bg-surface-container-high border border-transparent hover:border-slate-700 text-on-surface font-label-md text-label-md transition-all active:scale-95 duration-150"
             id="reset-filter-btn"
             type="button"
+            onClick={handleReset}
           >
             Reset filters
           </button>
           <button
-            className="relative overflow-hidden flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md shadow-md shadow-primary/20 hover:shadow-primary/35 transition-all duration-200 active:scale-95"
+            className="relative overflow-hidden cursor-pointer flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md shadow-md shadow-primary/20 hover:shadow-primary/35 transition-all duration-200 active:scale-95"
             id="apply-filter-btn"
-            type="button"
+            type="submit"
           >
             <span
               className="material-symbols-outlined text-base transition-transform duration-300"
@@ -85,7 +85,7 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
           </button>
         </div>
       </div>
-      <form className="flex flex-col gap-space-md" onSubmit={handleSubmit}>
+      <div className="flex flex-col gap-space-md">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
           {/* <!-- Status Dropdown --> */}
           <div className="flex flex-col gap-1">
@@ -99,7 +99,7 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
                 name="status"
                 defaultValue={searchParams.get("status") ?? ""}
               >
-                <option value="ALL">All statuses</option>
+                <option value="">All statuses</option>
                 <option value="SUCCESS">Success</option>
                 <option value="ERROR">Error</option>
               </select>
@@ -120,7 +120,7 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
                 name="range"
                 defaultValue={searchParams.get("range") ?? ""}
               >
-                <option value="all">All time</option>
+                <option value="">All time</option>
                 <option value="24h">Last 24 hours</option>
                 <option value="7d">Last 7 days</option>
                 <option value="30d">Last 30 days</option>
@@ -130,7 +130,50 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
               </span>
             </div>
           </div>
+          {/* <!-- Sort By Dropdown --> */}
+          <div className="flex flex-col gap-1">
+            <label className="font-label-sm text-label-sm text-on-surface font-medium">
+              Sort By
+            </label>
+            <div className="relative select-wrapper fancy-input-wrap rounded-lg bg-surface-container-low border border-[#1e2436]">
+              <select
+                className="w-full h-10 pl-3 pr-8 rounded-lg bg-transparent text-on-surface text-body-md font-body-md border-0 focus:ring-0 cursor-pointer appearance-none"
+                id="sort-by-filter"
+                name="sortBy"
+                defaultValue={searchParams.get("sortBy") ?? "createdAt"}
+              >
+                <option value="createdAt">Created At Time</option>
+                <option value="latencyMs">Latency</option>
+                <option value="totalCost">Total Cost</option>
+              </select>
+              <span className="select-chevron material-symbols-outlined text-slate-400 text-sm absolute right-2.5 top-3 pointer-events-none transition-transform duration-200">
+                expand_more
+              </span>
+            </div>
+          </div>
+          {/* <!-- Sort Order Dropdown --> */}
+          <div className="flex flex-col gap-1">
+            <label className="font-label-sm text-label-sm text-on-surface font-medium">
+              Sort Order
+            </label>
+            <div className="relative select-wrapper fancy-input-wrap rounded-lg bg-surface-container-low border border-[#1e2436]">
+              <select
+                className="w-full h-10 pl-3 pr-8 rounded-lg bg-transparent text-on-surface text-body-md font-body-md border-0 focus:ring-0 cursor-pointer appearance-none"
+                id="sort-order-filter"
+                name="sortOrder"
+                defaultValue={searchParams.get("sortOrder") ?? "desc"}
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+              <span className="select-chevron material-symbols-outlined text-slate-400 text-sm absolute right-2.5 top-3 pointer-events-none transition-transform duration-200">
+                expand_more
+              </span>
+            </div>
+          </div>
           {/* <!-- Provider Filter --> */}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
           <div className="flex flex-col gap-1">
             <label className="font-label-sm text-label-sm text-on-surface font-medium">
               Provider
@@ -289,8 +332,8 @@ const TracesFilterCard = ({ projectId }: { projectId: string }) => {
             </div>
           </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };
 
