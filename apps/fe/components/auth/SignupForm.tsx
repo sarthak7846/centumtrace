@@ -89,6 +89,7 @@ const SignupForm = ({
             onChange={(e) => checkPasswordStrength(e.target.value)}
             placeholder="••••••••••••"
             required
+            minLength={8}
             name="password"
             type="password"
           />

@@ -16,6 +16,12 @@ export async function authAction(mode: AuthMode, _: any, formData: FormData) {
     const password = formData.get("password");
 
     if (mode === "signup") {
+      if (typeof password !== "string" || password.length < 8) {
+        return {
+          message: "Password must be at least 8 characters long.",
+        };
+      }
+
       const res = await axios.post(
         `${apiUrl}/auth/signup`,
         {
@@ -29,7 +35,7 @@ export async function authAction(mode: AuthMode, _: any, formData: FormData) {
 
       return {
         success: true,
-        message: "Account created successfully!",
+        message: "Account created successfully! Please signin.",
       };
     }
 

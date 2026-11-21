@@ -1,4 +1,3 @@
-import OverviewCards from "@/components/dashboard/OverviewCards";
 import {
   LatencyMetrics,
   OverviewMetrics,
@@ -6,7 +5,6 @@ import {
   Range,
   validRanges,
 } from "./types";
-import VolumeRangeSelector from "@/components/dashboard/VolumeRangeSelector";
 import TraceVolumeChart from "@/components/dashboard/TraceVolumeChart";
 import { resolveSelectedProject } from "@/services/api/projects";
 import {

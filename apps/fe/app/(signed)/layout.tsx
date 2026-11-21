@@ -1,9 +1,12 @@
 import Sidebar from "@/components/Sidebar";
 import SignedHeader from "@/components/SignedHeader";
 import { getSignedInProjects } from "@/services/api/projects";
+import { redirect } from "next/navigation";
 
 const SignedLayout = async ({ children }: { children: React.ReactNode }) => {
   const projects = await getSignedInProjects();
+
+  if (projects.length === 0) redirect("/onboarding");
 
   return (
     <div className="bg-background min-h-screen">
@@ -13,11 +16,7 @@ const SignedLayout = async ({ children }: { children: React.ReactNode }) => {
         <main
           className={`p-6 ${projects.length !== 0 && "min-h-[calc(100vh-3.5rem)]"}`}
         >
-          {projects.length === 0 ? (
-            <p>No projects yet. Create your first project.</p>
-          ) : (
-            children
-          )}
+          {children}
         </main>
       </div>
     </div>
