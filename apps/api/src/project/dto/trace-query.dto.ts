@@ -8,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TraceStatus } from '@observe/db';
+import { TraceStatus } from '@centumtrace/db';
 
 export class TraceQueryDto {
   @IsOptional()

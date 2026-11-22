@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { SignupDto } from './signup.dto';
 import { Public } from './public.decorator';
-import { User } from '@observe/db';
+import { User } from '@centumtrace/db';
 
 @Controller('auth')
 @Public()

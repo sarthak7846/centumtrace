@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import path from "path";
-import { Prisma, prisma } from "@observe/db";
+import { Prisma, prisma } from "@centumtrace/db";
 import { Kafka } from "kafkajs";
 
 dotenv.config({ path: path.resolve(import.meta.dirname, "../../../.env") });

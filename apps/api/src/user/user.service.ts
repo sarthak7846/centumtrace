@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserDto } from './user.dto';
-import { prisma } from '@observe/db';
+import { prisma } from '@centumtrace/db';
 
 @Injectable()
 export class UserService {

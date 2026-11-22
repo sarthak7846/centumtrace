@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { prisma } from '@observe/db';
+import { prisma } from '@centumtrace/db';
 import { MembershipService } from 'src/membership/membership.service';
 import { VolumeRange } from './analytics.types';
 

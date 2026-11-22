@@ -1,4 +1,4 @@
-import { TraceStatus } from '@observe/db';
+import { TraceStatus } from '@centumtrace/db';
 import {
   IsNotEmpty,
   IsString,

@@ -1,5 +1,5 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
-import { prisma, MembershipRole } from '@observe/db';
+import { prisma, MembershipRole } from '@centumtrace/db';
 
 @Injectable()
 export class MembershipService {

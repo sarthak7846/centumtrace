@@ -10,7 +10,7 @@ import { MembershipService } from 'src/membership/membership.service';
 import { createHash, randomBytes } from 'crypto';
 import { APIKeyPayload } from './types/api-key.interface';
 import { KafkaService } from 'src/kafka/kafka.service';
-import { Prisma, prisma, Trace } from '@observe/db';
+import { Prisma, prisma, Trace } from '@centumtrace/db';
 import { TraceQueryDto } from './dto/trace-query.dto';
 
 @Injectable()

@@ -9,6 +9,7 @@ const nextConfig = {
   env: {
     OBSERVE_API_URL: process.env.OBSERVE_API_URL,
   },
+  output: 'standalone'
 };
 
 export default nextConfig;

@@ -1,28 +1,49 @@
-version: "3.9"
-
 services:
-  postgres:
-    image: postgres:17
-    container_name: ai-observability-postgres
+  api:
+    image: centumtrace-api:latest
+    container_name: centumtrace-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
     restart: unless-stopped
+
+  dashboard:
+    image: centumtrace-fe:latest
+    container_name: centumtrace-fe
+    ports:
+      - "3000:3000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ai_observability
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:8-alpine
-    container_name: ai-observability-redis
+      OBSERVE_API_URL: http://api:8000
+    depends_on:
+      - api
     restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
 
-volumes:
-  postgres_data:
-  redis_data:
+# version: "3.9"
+
+# services:
+#   postgres:
+#     image: postgres:17
+#     container_name: ai-observability-postgres
+#     restart: unless-stopped
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: postgres
+#       POSTGRES_DB: ai_observability
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+#   redis:
+#     image: redis:8-alpine
+#     container_name: ai-observability-redis
+#     restart: unless-stopped
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis_data:/data
+
+# volumes:
+#   postgres_data:
+#   redis_data:

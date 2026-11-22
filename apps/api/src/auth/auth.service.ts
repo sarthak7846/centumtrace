@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SignupDto } from './signup.dto';
 import { OrganizationService } from 'src/organization/organization.service';
 import { MembershipService } from 'src/membership/membership.service';
-import { User } from '@observe/db';
+import { User } from '@centumtrace/db';
 
 @Injectable()
 export class AuthService {

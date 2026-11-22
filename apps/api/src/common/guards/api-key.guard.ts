@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { prisma } from '@observe/db';
+import { prisma } from '@centumtrace/db';
 import { createHash } from 'crypto';
 import { Request } from 'express';
 
