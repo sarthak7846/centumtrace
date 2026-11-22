@@ -4,7 +4,7 @@ import { getSignedInProjects } from "@/services/api/projects";
 import { redirect } from "next/navigation";
 
 const SignedLayout = async ({ children }: { children: React.ReactNode }) => {
-  const projects = await getSignedInProjects();
+  const {projects} = await getSignedInProjects();
 
   if (projects.length === 0) redirect("/onboarding");
 

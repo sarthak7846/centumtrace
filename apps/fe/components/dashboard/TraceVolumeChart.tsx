@@ -1,10 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
-import {
-  AnalyticsVolume,
-  Range,
-} from "@/app/(signed)/dashboard/types";
+import { AnalyticsVolume, Range } from "@/app/(signed)/dashboard/types";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -15,15 +12,16 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import { getAnalyticsVolume } from "@/services/api/analytics";
 
 type TraceVolumeChartProps = {
   initialAnalyticsVolume: AnalyticsVolume;
-  selectProjectId: string;
+  selectedProjectId: string;
 };
 
 export default function TraceVolumeChart({
   initialAnalyticsVolume,
-  selectProjectId,
+  selectedProjectId,
 }: TraceVolumeChartProps) {
   const [selectedRange, setSelectedRange] = useState<Range>("24h");
   const [analyticsVolume, setAnalyticsVolume] = useState<AnalyticsVolume>(
@@ -77,21 +75,10 @@ export default function TraceVolumeChart({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        projectId: selectProjectId,
+      const updatedAnalytics: AnalyticsVolume = await getAnalyticsVolume(
+        selectedProjectId,
         range,
-      });
-
-      const response = await fetch(
-        `/api/analytics/volume?${params.toString()}`,
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch trace volume");
-      }
-
-      const updatedAnalytics: AnalyticsVolume = await response.json();
-
       setAnalyticsVolume(updatedAnalytics);
       setSelectedRange(range);
     } catch (error) {

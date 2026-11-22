@@ -1,3 +1,5 @@
+"use server";
+
 import { Project } from "@/app/(signed)/dashboard/types";
 import { apiFetch } from "@/lib/api";
 import { getCurrentUser } from "./user";
@@ -14,11 +16,11 @@ export const getSignedInProjects = cache(async () => {
 
   const projects = await getProjects(organization.id);
 
-  return projects;
+  return { projects, organizationId: organization.id };
 });
 
 export async function resolveSelectedProject(projectId?: string) {
-  const projects = await getSignedInProjects();
+  const { projects } = await getSignedInProjects();
 
   if (projects.length === 0) {
     return { projects, selectedProject: null };
@@ -35,5 +37,38 @@ export async function getProjects(organizationId: string): Promise<Project[]> {
   if (res.error) {
     throw new Error(res.message);
   }
+  return res;
+}
+
+export async function createProject(
+  organizationId: string,
+  name: string,
+  description: string,
+) {
+  const res = await apiFetch(`/project`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      organizationId,
+      name,
+      description,
+    }),
+  });
+  return res;
+}
+
+export async function createAPIKey(projectId: string, name: string) {
+  const res = await apiFetch(`/project/${projectId}/api-key`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      name,
+    }),
+  });
+
   return res;
 }

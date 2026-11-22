@@ -28,13 +28,17 @@ export class ProjectService {
       userId,
     );
 
-    return prisma.project.create({
+    const project = await prisma.project.create({
       data: {
         organizationId: dto.organizationId,
         name: dto.name,
         description: dto.description,
       },
     });
+
+    return {
+      data: project,
+    };
   }
 
   async getAllProjects(organizationId?: string) {
@@ -73,9 +77,11 @@ export class ProjectService {
     });
 
     return {
-      id,
-      key: rawKey,
-      name,
+      data: {
+        id,
+        key: rawKey,
+        name,
+      },
     };
   }
 

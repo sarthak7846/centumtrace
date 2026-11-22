@@ -5,6 +5,7 @@ import {
   Range,
   validRanges,
 } from "@/app/(signed)/dashboard/types";
+import { getLatencyBreakdown } from "@/services/api/analytics";
 import { useState } from "react";
 
 const LatencyBreakdownTable = ({
@@ -28,21 +29,8 @@ const LatencyBreakdownTable = ({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        projectId: selectedProjectId,
-        range,
-      });
-
-      const response = await fetch(
-        `/api/analytics/latency/breakdown?${params.toString()}`,
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch latency breakdown");
-      }
-
-      const updatedLatencyBreakdown: LatencyBreakdown = await response.json();
-
+      const updatedLatencyBreakdown: LatencyBreakdown =
+        await getLatencyBreakdown(selectedProjectId, range);
       setLatencyBreakdown(updatedLatencyBreakdown);
       setSelectedRange(range);
     } catch (error) {

@@ -11,6 +11,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import { getCostTrend } from "@/services/api/analytics";
 
 type CostTrendChartProps = {
   initialCostTrend: CostTrend;
@@ -50,21 +51,7 @@ export default function CostTrendChart({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        projectId: selectedProjectId,
-        range,
-      });
-
-      const response = await fetch(
-        `/api/analytics/cost/trend?${params.toString()}`,
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch cost trend");
-      }
-
-      const updatedCostTrend: CostTrend = await response.json();
-
+      const updatedCostTrend: CostTrend = await getCostTrend(selectedProjectId, range)
       setCostTrend(updatedCostTrend);
       setSelectedRange(range);
     } catch (error) {

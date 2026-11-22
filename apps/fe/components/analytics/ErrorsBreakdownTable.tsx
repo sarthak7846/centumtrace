@@ -5,6 +5,7 @@ import {
   Range,
   validRanges,
 } from "@/app/(signed)/dashboard/types";
+import { getErrorsBreakdown } from "@/services/api/analytics";
 import { useState } from "react";
 
 const ErrorsBreakdownTable = ({
@@ -28,21 +29,7 @@ const ErrorsBreakdownTable = ({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        projectId: selectedProjectId,
-        range,
-      });
-
-      const response = await fetch(
-        `/api/analytics/errors/breakdown?${params.toString()}`,
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch error breakdown");
-      }
-
-      const updatedErrorBreakdown: ErrorBreakdown = await response.json();
-
+      const updatedErrorBreakdown: ErrorBreakdown = await getErrorsBreakdown(selectedProjectId, range)
       setErrorBreakdown(updatedErrorBreakdown);
       setSelectedRange(range);
     } catch (error) {

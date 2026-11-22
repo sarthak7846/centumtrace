@@ -143,7 +143,7 @@ const DashboardPage = async ({
           {/* <!-- SECTION 4: TRACE VOLUME INTERACTIVE CHART (Entry 5) --> */}
           <TraceVolumeChart
             initialAnalyticsVolume={analyticsVolume}
-            selectProjectId={selectedProject.id}
+            selectedProjectId={selectedProject.id}
           />
         </div>
       </main>

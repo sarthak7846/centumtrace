@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createApiKeyAction, createProjectAction } from "@/app/(onboarding)/onboarding/actions";
+import { createAPIKey, createProject } from "@/services/api/projects";
 
 type Project = {
   id: string;
@@ -24,7 +24,11 @@ const steps = [
   { id: "integration", label: "Integrate SDK" },
 ] as const;
 
-export default function OnboardingFlow() {
+export default function OnboardingFlow({
+  organizationId,
+}: {
+  organizationId: string;
+}) {
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("project");
@@ -43,6 +47,13 @@ export default function OnboardingFlow() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("creating project", "move");
+
+    if (project) {
+      setStep("api-key");
+      return;
+    }
+
     setError("");
 
     if (!projectName.trim()) {
@@ -52,18 +63,19 @@ export default function OnboardingFlow() {
 
     setLoading(true);
 
-    const result = await createProjectAction({
-      name: projectName.trim(),
-      description: description.trim() || undefined,
-    });
+    const result = await createProject(
+      organizationId,
+      projectName.trim(),
+      description.trim() ?? "",
+    );
+    console.log("result", result, "move");
 
     setLoading(false);
 
-    if (!result.success) {
+    if (result.error) {
       setError(result.message);
       return;
     }
-
     setProject(result.data);
     setStep("api-key");
   };
@@ -75,14 +87,11 @@ export default function OnboardingFlow() {
     setError("");
     setLoading(true);
 
-    const result = await createApiKeyAction({
-      projectId: project.id,
-      name: keyName.trim() || "Production",
-    });
+    const result = await createAPIKey(project.id, keyName.trim());
 
     setLoading(false);
 
-    if (!result.success) {
+    if (result.error) {
       setError(result.message);
       return;
     }
@@ -299,9 +308,9 @@ export default function OnboardingFlow() {
                 </div>
 
                 <div className="rounded-lg border border-border bg-background p-4 mb-6">
-                  <p className="text-xs text-muted-foreground mb-1">
+                  {/* <p className="text-xs text-muted-foreground mb-1">
                     YOUR PROJECT
-                  </p>
+                  </p> */}
                   <p className="font-medium text-sm">{project?.name}</p>
                 </div>
 
@@ -370,8 +379,8 @@ export default function OnboardingFlow() {
                   </h2>
 
                   <p className="text-sm text-muted-foreground mt-1">
-                    Copy and securely store your key. You won't be able to
-                    view it again after leaving this page.
+                    Copy and securely store your key. You won't be able to view
+                    it again after leaving this page.
                   </p>
                 </div>
 
@@ -381,9 +390,7 @@ export default function OnboardingFlow() {
                     <span className="text-sm font-medium">
                       {apiKey?.name ?? "API key"}
                     </span>
-                    <span className="text-xs text-amber-600">
-                      Shown once
-                    </span>
+                    <span className="text-xs text-amber-600">Shown once</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -401,8 +408,8 @@ export default function OnboardingFlow() {
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-3">
-                    Keep this key private. Never commit it to source control
-                    or expose it in browser-side code.
+                    Keep this key private. Never commit it to source control or
+                    expose it in browser-side code.
                   </p>
                 </div>
 
@@ -418,12 +425,8 @@ export default function OnboardingFlow() {
 
                   <div className="rounded-xl border border-border overflow-hidden mb-4">
                     <div className="flex items-center justify-between bg-muted/50 px-4 py-2 border-b border-border">
-                      <span className="text-xs font-medium">
-                        Terminal
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        npm
-                      </span>
+                      <span className="text-xs font-medium">Terminal</span>
+                      <span className="text-xs text-muted-foreground">npm</span>
                     </div>
 
                     <pre className="overflow-x-auto p-4 text-sm">
@@ -433,9 +436,7 @@ export default function OnboardingFlow() {
 
                   <div className="rounded-xl border border-border overflow-hidden">
                     <div className="flex items-center justify-between bg-muted/50 px-4 py-2 border-b border-border">
-                      <span className="text-xs font-medium">
-                        .env
-                      </span>
+                      <span className="text-xs font-medium">.env</span>
                       <span className="text-xs text-muted-foreground">
                         Environment variables
                       </span>
@@ -448,9 +449,7 @@ export default function OnboardingFlow() {
 
                   <div className="rounded-xl border border-border overflow-hidden mt-4">
                     <div className="flex items-center justify-between bg-muted/50 px-4 py-2 border-b border-border">
-                      <span className="text-xs font-medium">
-                        TypeScript
-                      </span>
+                      <span className="text-xs font-medium">TypeScript</span>
                       <span className="text-xs text-muted-foreground">
                         observe.ts
                       </span>

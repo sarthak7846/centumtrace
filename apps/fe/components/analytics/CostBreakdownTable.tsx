@@ -5,6 +5,7 @@ import {
   Range,
   validRanges,
 } from "@/app/(signed)/dashboard/types";
+import { getCostBreakdown } from "@/services/api/analytics";
 import { useState } from "react";
 
 const CostBreakdownTable = ({
@@ -27,21 +28,10 @@ const CostBreakdownTable = ({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        projectId: selectedProjectId,
+      const updatedCostBreakdown: CostBreakdown = await getCostBreakdown(
+        selectedProjectId,
         range,
-      });
-
-      const response = await fetch(
-        `/api/analytics/cost/breakdown?${params.toString()}`,
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch cost breakdown");
-      }
-
-      const updatedCostBreakdown: CostBreakdown = await response.json();
-
       setCostBreakdown(updatedCostBreakdown);
       setSelectedRange(range);
     } catch (error) {

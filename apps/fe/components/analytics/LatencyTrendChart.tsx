@@ -14,6 +14,7 @@ import {
   YAxis,
   Tooltip,
 } from "recharts";
+import { getLatencyTrend } from "@/services/api/analytics";
 
 type LatencyTrendChartProps = {
   initialLatencyTrend: LatencyTrend;
@@ -55,21 +56,7 @@ export default function LatencyTrendChart({
     setError(null);
 
     try {
-      const params = new URLSearchParams({
-        projectId: selectedProjectId,
-        range,
-      });
-
-      const response = await fetch(
-        `/api/analytics/latency/trend?${params.toString()}`,
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch latency trend");
-      }
-
-      const updatedLatencyTrend: LatencyTrend = await response.json();
-
+      const updatedLatencyTrend: LatencyTrend = await getLatencyTrend(selectedProjectId, range)
       setLatencyTrend(updatedLatencyTrend);
       setSelectedRange(range);
     } catch (error) {
