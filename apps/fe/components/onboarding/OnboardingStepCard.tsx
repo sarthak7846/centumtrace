@@ -1,26 +1,71 @@
+import { Dispatch, FormEvent, SetStateAction, useState } from "react";
 import { Step } from "./OnboardingFlow";
+import { ApiKey } from "@/app/(signed)/dashboard/types";
 
-const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
+type PackageManager = "npm" | "pnpm" | "pip";
+
+const installCommands: Record<PackageManager, string> = {
+  npm: "npm install @centrumtrace/sdk",
+  pnpm: "pnpm add @centrumtrace/sdk",
+  pip: "pip install centrumtrace",
+};
+
+const OnboardingStepCard = ({
+  currentStep,
+  handleCreateProject,
+  projectName,
+  setProjectName,
+  description,
+  setDescription,
+  loading,
+  handleGenerateApiKey,
+  keyName,
+  setKeyName,
+  handleSkipApiKey,
+  handleBack,
+  copied,
+  handleCopyKey,
+  apiKey,
+  handleContinue,
+  error,
+}: {
+  currentStep: Step;
+  handleCreateProject: (e: FormEvent<Element>) => Promise<void>;
+  projectName: string;
+  setProjectName: Dispatch<SetStateAction<string>>;
+  description: string;
+  setDescription: Dispatch<SetStateAction<string>>;
+  loading: boolean;
+  handleGenerateApiKey: (e: FormEvent<Element>) => Promise<void>;
+  keyName: string;
+  setKeyName: Dispatch<SetStateAction<string>>;
+  handleSkipApiKey: () => void;
+  handleBack: () => void;
+  copied: boolean;
+  setCopied: Dispatch<SetStateAction<boolean>>;
+  handleCopyKey: () => Promise<void>;
+  apiKey: ApiKey | null;
+  handleContinue: () => void;
+  error: string;
+}) => {
+  const [activeTab, setActiveTab] = useState<PackageManager>("npm");
+
   return (
     <div className="relative rounded-2xl border border-[#1f283e] bg-[#0d121c]/95 backdrop-blur-xl shadow-2xl shadow-black/80 p-6 sm:p-9 transition-all">
       {/* <!-- Error Banner Container --> */}
-      <div
-        className="hidden mb-6 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 items-center gap-3 animate-fadeInUp"
-        id="error-container"
-      >
-        <svg
-          className="w-5 h-5 text-rose-400 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          viewBox="0 0 24 24"
+      {error && (
+        <div
+          className="hidden mb-6 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 items-center gap-3 animate-fadeInUp"
+          id="error-container"
         >
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" x2="12" y1="8" y2="12"></line>
-          <line x1="12" x2="12.01" y1="16" y2="16"></line>
-        </svg>
-        <span id="error-text">Please enter a valid project name.</span>
-      </div>
+          <img
+            src="/icons/caution.svg"
+            className="w-5 h-5 shrink-0"
+            alt="caution"
+          />
+          <span id="error-text">{error}</span>
+        </div>
+      )}
       {/* <!-- ============================================== -->
 <!-- STEP 1: CREATE PROJECT -->
 <!-- ============================================== --> */}
@@ -28,20 +73,7 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
         <div className="step-card-enter" id="step-1-panel">
           <div className="mb-7">
             <div className="h-12 w-12 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 flex items-center justify-center mb-4 shadow-inner ring-1 ring-indigo-400/20">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <rect height="7" rx="1" width="7" x="3" y="3"></rect>
-                <rect height="7" rx="1" width="7" x="14" y="3"></rect>
-                <rect height="7" rx="1" width="7" x="14" y="14"></rect>
-                <rect height="7" rx="1" width="7" x="3" y="14"></rect>
-              </svg>
+              <img src="/icons/box.svg" alt="box" className="w-6 h-6" />
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               Create your first project
@@ -51,12 +83,7 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
               different applications or environments.
             </p>
           </div>
-          <form
-            className="space-y-5"
-            onSubmit={() => {
-              () => {};
-            }}
-          >
+          <form className="space-y-5" onSubmit={handleCreateProject}>
             <div>
               <label
                 className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
@@ -69,19 +96,18 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                   className="glow-input w-full rounded-xl border border-[#242f48] bg-[#080b11] px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200"
                   id="projectName"
                   maxLength={100}
-                  onInput={() => {
-                    () => {};
-                  }}
+                  onChange={(e) => setProjectName(e.target.value)}
                   placeholder="e.g. Customer Support AI"
                   type="text"
-                  value="Customer Support AI"
+                  required
+                  value={projectName}
                 />
-                <div
+                {/* <div
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-mono"
                   id="project-char-count"
                 >
                   19/100
-                </div>
+                </div> */}
               </div>
             </div>
             <div>
@@ -92,57 +118,47 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                 >
                   Description
                 </label>
-                <span
+                {/* <span
                   className="text-xs text-slate-500 font-mono"
                   id="desc-char-count"
                 >
                   92/500
-                </span>
+                </span> */}
               </div>
               <textarea
                 className="glow-input w-full resize-none rounded-xl border border-[#242f48] bg-[#080b11] px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200 leading-relaxed"
                 id="description"
                 maxLength={500}
-                onInput={() => {
-                  () => {};
-                }}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="What will you be monitoring? (e.g. Production user queries, latency thresholds, and guardrails)"
                 rows={3}
-              >
-                Customer facing LLM agent orchestrating retrieval and response
-                generation htmlFor customer inquiries.
-              </textarea>
+                value={description}
+              />
             </div>
             <div className="pt-4 flex items-center justify-between border-t border-[#1a2235]">
               <span className="text-xs text-slate-500 flex items-center gap-1.5">
-                <svg
+                <img
+                  src="/icons/clock.svg"
+                  alt="clock"
                   className="w-3.5 h-3.5 text-indigo-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
+                />
                 Takes less than 30 seconds
               </span>
               <button
                 className="btn-lift inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30"
                 id="btn-create-project"
                 type="submit"
+                disabled={loading || !projectName.trim()}
               >
-                <span>Create project</span>
-                <svg
+                <span>
+                  {loading ? "Creating project..." : "Create project"}
+                </span>
+
+                <img
+                  src="/icons/right-arrow.svg"
+                  alt="right-arrow"
                   className="w-4 h-4 transition-transform group-hover:translate-x-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M5 12h14"></path>
-                  <path d="m12 5 7 7-7 7"></path>
-                </svg>
+                />
               </button>
             </div>
           </form>
@@ -152,22 +168,10 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
 <!-- STEP 2: GENERATE API KEY -->
 <!-- ============================================== --> */}
       {currentStep === "api-key" && (
-        <div className="hidden" id="step-2-panel">
+        <div id="step-2-panel">
           <div className="mb-7">
             <div className="h-12 w-12 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 flex items-center justify-center mb-4 shadow-inner ring-1 ring-indigo-400/20">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M21 2l-2 2m-1.5 1.5L16 7l-1.5-1.5"></path>
-                <path d="m15.5 8.5 3 3L7 23H2v-5L15.5 8.5z"></path>
-                <circle cx="16.5" cy="7.5" fill="currentColor" r=".5"></circle>
-              </svg>
+              <span className="material-symbols-outlined w-6 h-6">key</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               Generate your API key
@@ -191,7 +195,7 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                   className="font-semibold text-sm text-white"
                   id="display-project-name"
                 >
-                  Customer Support AI
+                  {projectName}
                 </p>
               </div>
             </div>
@@ -200,12 +204,7 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
               Ready
             </span>
           </div>
-          <form
-            className="space-y-5"
-            onSubmit={() => {
-              () => {};
-            }}
-          >
+          <form className="space-y-5" onSubmit={handleGenerateApiKey}>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label
@@ -214,37 +213,27 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                 >
                   API key name <span className="text-rose-400">*</span>
                 </label>
-                <span
+                {/* <span
                   className="text-xs text-slate-500 font-mono"
                   id="key-char-count"
                 >
                   10/100
-                </span>
+                </span> */}
               </div>
               <input
                 className="glow-input w-full rounded-xl border border-[#242f48] bg-[#080b11] px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200"
                 id="keyName"
                 maxLength={100}
-                onInput={() => {
-                  () => {};
-                }}
+                onChange={(e) => setKeyName(e.target.value)}
                 placeholder="e.g. Production, Staging, or Local Agent"
                 required={true}
                 type="text"
-                value="Production"
+                value={keyName}
               />
-              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
-                <svg
-                  className="w-3.5 h-3.5 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <path d="M12 16v-4"></path>
-                  <path d="M12 8h.01"></path>
-                </svg>
+              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5 ">
+                <span className="material-symbols-outlined text-slate-400">
+                  error
+                </span>
                 Use an identifiable name matching the environment where this key
                 will be deployed.
               </p>
@@ -252,39 +241,29 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
             <div className="pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-[#1a2235]">
               <button
                 className="text-xs font-medium text-slate-400 hover:text-indigo-300 py-2.5 transition-colors text-center sm:text-left hover:underline"
-                onClick={() => {
-                  () => {};
-                }}
+                onClick={handleSkipApiKey}
                 type="button"
               >
-                Skip htmlFor now →
+                Skip for now →
               </button>
               <div className="flex items-center gap-3">
                 <button
-                  className="rounded-xl border border-[#26324d] bg-[#111724] hover:bg-[#182133] hover:border-slate-500 px-5 py-2.5 text-sm font-medium text-slate-200 transition-all active:scale-95"
-                  onClick={() => {
-                    () => {};
-                  }}
+                  className="rounded-xl cursor-pointer border border-[#26324d] bg-[#111724] hover:bg-[#182133] hover:border-slate-500 px-5 py-2.5 text-sm font-medium text-slate-200 transition-all active:scale-95"
+                  onClick={handleBack}
                   type="button"
                 >
                   Back
                 </button>
                 <button
-                  className="btn-lift inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30"
+                  className="btn-lift inline-flex items-center cursor-pointer gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30"
+                  disabled={loading || !keyName.trim()}
                   id="btn-gen-key"
                   type="submit"
                 >
-                  <span>Generate API key</span>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M5 12h14"></path>
-                    <path d="m12 5 7 7-7 7"></path>
-                  </svg>
+                  <span>{loading ? "Generating..." : "Generate API key"}</span>
+                  <span className="material-symbols-outlined">
+                    arrow_forward
+                  </span>
                 </button>
               </div>
             </div>
@@ -295,20 +274,10 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
 <!-- STEP 3: INTEGRATE SDK -->
 <!-- ============================================== --> */}
       {currentStep === "integration" && (
-        <div className="hidden" id="step-3-panel">
+        <div id="step-3-panel">
           <div className="mb-7">
             <div className="h-12 w-12 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mb-4 shadow-inner ring-1 ring-emerald-400/20">
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2.5"
-                viewBox="0 0 24 24"
-              >
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <span className="material-symbols-outlined">key</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
               Your API key is ready
@@ -322,22 +291,10 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-5 mb-7 relative overflow-hidden transition-all hover:border-amber-500/50">
             <div className="flex items-center justify-between gap-3 mb-3">
               <span className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-                <svg
-                  className="w-4 h-4 text-amber-400"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="m15.5 8.5 3 3L7 23H2v-5L15.5 8.5z"></path>
-                  <circle
-                    cx="16.5"
-                    cy="7.5"
-                    fill="currentColor"
-                    r=".5"
-                  ></circle>
-                </svg>
-                <span id="active-key-label">Production API Key</span>
+                <span className="material-symbols-outlined text-amber-400">
+                  key
+                </span>
+                <span id="active-key-label">{apiKey?.name ?? "API key"}</span>
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>{" "}
@@ -349,43 +306,25 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                 className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-xl bg-[#07090e] border border-[#2a344a] px-3.5 py-3 text-xs sm:text-sm font-mono text-indigo-300 select-all tracking-wide"
                 id="api-key-code"
               >
-                aura_live_9f8d38102b4c7e6a5381d9f03c2e1b8a
+                {apiKey?.key}
               </code>
               <button
                 aria-label="Copy API Key"
-                className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 px-4 py-3 text-xs font-semibold text-white shadow-md shadow-indigo-600/25 transition-all active:scale-95 relative"
+                className="shrink-0 cursor-pointer inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 border border-indigo-400/40 px-4 py-3 text-xs font-semibold text-white shadow-md shadow-indigo-600/25 transition-all active:scale-95 relative"
                 id="copy-key-btn"
-                onClick={() => {
-                  () => {};
-                }}
+                onClick={handleCopyKey}
                 type="button"
               >
-                <svg
-                  className="w-4 h-4 transition-transform"
-                  fill="none"
-                  id="copy-icon"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  viewBox="0 0 24 24"
-                >
-                  <rect height="14" rx="2" ry="2" width="14" x="8" y="8"></rect>
-                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
-                </svg>
-                <span id="copy-text">Copy</span>
+                <span className="material-symbols-outlined transition-transform">
+                  content_copy
+                </span>
+                <span id="copy-text">{copied ? "Copied!" : "Copy"}</span>
               </button>
             </div>
             <p className="text-xs text-amber-200/70 mt-3 flex items-center gap-1.5">
-              <svg
-                className="w-3.5 h-3.5 text-amber-400 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 9v4"></path>
-                <path d="M12 17h.01"></path>
-                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              </svg>
+              <span className="material-symbols-outlined text-amber-400 ">
+                warning
+              </span>
               Never commit this secret key to client-side repositories or public
               git branches.
             </p>
@@ -404,36 +343,21 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
               </div>
               {/* <!-- Package Manager Selector --> */}
               <div className="flex items-center bg-[#07090e] border border-[#232c42] rounded-lg p-0.5 text-xs font-mono">
-                <button
-                  className="px-2.5 py-1 rounded bg-indigo-600 text-white font-medium transition-all"
-                  id="tab-npm"
-                  onClick={() => {
-                    () => {};
-                  }}
-                  type="button"
-                >
-                  npm
-                </button>
-                <button
-                  className="px-2.5 py-1 rounded text-slate-400 hover:text-white transition-all"
-                  id="tab-pnpm"
-                  onClick={() => {
-                    () => {};
-                  }}
-                  type="button"
-                >
-                  pnpm
-                </button>
-                <button
-                  className="px-2.5 py-1 rounded text-slate-400 hover:text-white transition-all"
-                  id="tab-pip"
-                  onClick={() => {
-                    () => {};
-                  }}
-                  type="button"
-                >
-                  pip
-                </button>
+                {(["npm", "pnpm", "pip"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    className={`px-2.5 py-1 cursor-pointer rounded transition-all ${
+                      activeTab === tab
+                        ? "bg-indigo-600 text-white font-medium"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                    id={`tab-${tab}`}
+                    onClick={() => setActiveTab(tab)}
+                    type="button"
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
             </div>
             {/* <!-- Terminal block --> */}
@@ -453,15 +377,15 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                   className="text-[11px] font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20"
                   id="pkg-tag"
                 >
-                  npm
+                  {activeTab}
                 </span>
               </div>
               <div className="p-3.5 flex items-center justify-between">
                 <code
-                  className="text-xs sm:text-sm font-mono text-emerald-300"
+                  className="text-xs font-mono text-emerald-300"
                   id="terminal-command"
                 >
-                  npm install @aura/sdk
+                  {installCommands[activeTab]}
                 </code>
                 <button
                   className="text-xs text-slate-400 hover:text-white font-mono px-2.5 py-1 rounded bg-[#161d2d] hover:bg-[#20293d] border border-transparent hover:border-slate-600 transition-all flex items-center gap-1.5"
@@ -506,8 +430,9 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
               </div>
               <pre className="p-3.5 text-xs font-mono text-indigo-200 overflow-x-auto leading-relaxed">
                 <code id="env-snippet-code">
-                  AURA_API_KEY=aura_live_9f8d38102b4c7e6a5381d9f03c2e1b8a
-                  AURA_PROJECT_ID=prj_9a8f4c2e1b
+                  CENTUMTRACE_API_KEY=aura_live_9f8d38102b4c7e6a5381d9f03c2e1b8a{" "}
+                  {"\n"}
+                  CENTUMTRACE_PROJECT_ID=prj_9a8f4c2e1b
                 </code>
               </pre>
             </div>
@@ -517,7 +442,7 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-blue-400"></span>
                   <span className="text-xs font-mono font-medium text-slate-300">
-                    observe.ts
+                    centumtrace.ts
                   </span>
                 </div>
                 <span className="text-[11px] font-mono text-slate-400">
@@ -526,42 +451,55 @@ const OnboardingStepCard = ({ currentStep }: { currentStep: Step }) => {
               </div>
               <pre className="p-4 text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
                 <code>
-                  <span className="text-violet-400">import</span> {"Aura"}{" "}
+                  <span className="text-violet-400">import</span> Aura{" "}
                   <span className="text-violet-400">from</span>{" "}
-                  <span className="text-emerald-300">"@aura/sdk"</span>;
+                  <span className="text-emerald-300">"@aura/sdk"</span>;{"\n\n"}
                   <span className="text-violet-400">export const</span> aura ={" "}
                   <span className="text-violet-400">new</span>{" "}
                   <span className="text-yellow-300">Aura</span>
-                  {/* ({
-  apiKey: process.env.<span className="text-indigo-300">AURA_API_KEY</span>!,
-  projectId: process.env.<span className="text-indigo-300">AURA_PROJECT_ID</span>!,
-}); */}
+                  {"({\n"}
+                  {"  apiKey: process.env."}
+                  <span className="text-indigo-300">CENTUMTRACE_API_KEY</span>
+                  {"!,\n"}
+                  {"  projectId: process.env."}
+                  <span className="text-indigo-300">
+                    CENTUMTRACE_PROJECT_ID
+                  </span>
+                  {"!,\n"}
+                  {"});\n\n"}
                   <span className="text-slate-500">
-                    // Start capturing your LLM traces &amp; latency
-                    automatically:
+                    {
+                      "// Start capturing your LLM traces & latency automatically:\n"
+                    }
                   </span>
                   <span className="text-violet-400">await</span> aura.
                   <span className="text-yellow-300">trace</span>
-                  {/* ({
-  name: <span className="text-emerald-300">"customer_support_query"</span>,
-  model: <span className="text-emerald-300">"gpt-4"</span>,
-}); */}
+                  {"({\n"}
+                  {"  name: "}
+                  <span className="text-emerald-300">
+                    "customer_support_query"
+                  </span>
+                  {",\n"}
+                  {"  model: "}
+                  <span className="text-emerald-300">"gpt-4"</span>
+                  {",\n"}
+                  {"});"}
                 </code>
               </pre>
             </div>
           </div>
           {/* <!-- Bottom Action Buttons --> */}
-          <div className="pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-[#1a2235]">
-            <button
+          <div className="pt-6 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 border-t border-[#1a2235]">
+            {/* <button
               className="text-xs font-medium text-slate-400 hover:text-indigo-300 py-2.5 transition-colors text-center sm:text-left hover:underline"
               onClick={() => {}}
               type="button"
             >
               I'll integrate later
-            </button>
+            </button> */}
             <button
-              className="btn-lift inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30"
-              onClick={() => {}}
+              className="btn-lift cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30"
+              onClick={handleContinue}
               type="button"
             >
               <span>Continue to Analytics</span>

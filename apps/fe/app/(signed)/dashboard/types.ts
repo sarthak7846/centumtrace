@@ -166,6 +166,12 @@ export type TraceResponse = {
   limit: number;
 };
 
+export type ApiKey = {
+  id: string;
+  name: string;
+  key: string;
+};
+
 export type SearchParams = Promise<{
   projectId?: string;
   page?: string;
