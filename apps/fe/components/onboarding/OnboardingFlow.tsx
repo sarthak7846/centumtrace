@@ -6,13 +6,8 @@ import { createAPIKey, createProject } from "@/services/api/projects";
 import Header from "./Header";
 import OnboardingStepCard from "./OnboardingStepCard";
 import OnboardingStepIndicator from "./OnboardingStepIndicator";
-import { ApiKey } from "@/app/(signed)/dashboard/types";
+import { ApiKey, Project } from "@/app/(signed)/dashboard/types";
 
-type Project = {
-  id: string;
-  name: string;
-  description?: string;
-};
 
 export type Step = "project" | "api-key" | "integration";
 

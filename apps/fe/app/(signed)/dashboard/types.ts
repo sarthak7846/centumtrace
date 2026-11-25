@@ -216,3 +216,9 @@ export type TraceDetails = {
   metadata: any | null;
   createdAt: string;
 };
+
+// export type Project = {
+//   id: string;
+//   name: string;
+//   description?: string;
+// };
